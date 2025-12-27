@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --starlight-c-bg: #FAF9F6;
+    --starlight-c-text: #222222;
+  }
+}

@@ -1,0 +1,26 @@
+---
+title: Linear Regression
+description: Interactive exploration of simple linear regression models
+---
+
+Linear regression models the relationship between a dependent variable $y$ and an independent variable $x$. The simple linear model is given by:
+
+$$ y = mx + b $$
+
+where:
+- $m$ is the slope (rate of change)
+- $b$ is the y-intercept (value when $x = 0$)
+
+## Interactive Exploration
+
+Adjust the slope and intercept below to observe how the regression line fits the data.
+
+<InteractiveRegression client:visible />
+
+## Model Interpretation
+
+The slope parameter $m$ indicates the expected change in $y$ for a one-unit increase in $x$. The intercept $b$ represents the predicted value of $y$ when $x = 0$.
+
+When fitting data, we seek values of $m$ and $b$ that minimize the sum of squared residuals:
+
+$$ \min_{m,b} \sum_{i=1}^n (y_i - (mx_i + b))^2 $$
