@@ -16,8 +16,8 @@
 - Charting: d3-scale ONLY (SVG rendered by Svelte)
 
 ### Design System
-- Background: paper #F4F3EF
-- Text: ink #222222
+- Background (Light Theme): paper #F4F3EF
+- Text (Light Theme): ink #222222
 - Interactive Accent: interactive #002FA7 (Klein Blue)
 - Klein Blue is ONLY for interactive elements (sliders, active states, draggable handles)
 - Never use Klein Blue for static borders or backgrounds

@@ -3,16 +3,21 @@
 @tailwind utilities;
 
 @layer base {
+  /* Global Accents */
   :root {
-    --starlight-c-bg: #F4F3EF;
-    --starlight-c-text: #222222;
-
-    /* Starlight Overrides */
-    --sl-color-bg: var(--starlight-c-bg);
-    --sl-color-bg-sidebar: var(--starlight-c-bg);
     --sl-color-accent: #002FA7;
     --sl-color-accent-high: #002FA7;
     --sl-color-accent-low: #002FA7;
+  }
+
+  /* Light Mode Specifics */
+  :root[data-theme='light'] {
+    --starlight-c-bg: #F4F3EF;
+    --starlight-c-text: #222222;
+
+    /* Starlight Overrides for Light Mode */
+    --sl-color-bg: var(--starlight-c-bg);
+    --sl-color-bg-sidebar: var(--starlight-c-bg);
     --sl-color-text-accent: #F4F3EF;
   }
 
