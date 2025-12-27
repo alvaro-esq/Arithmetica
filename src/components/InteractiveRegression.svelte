@@ -1,9 +1,8 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
-  import { onMount } from 'svelte';
 
-  let slope = 1;
-  let intercept = 0;
+  let slope = $state(1);
+  let intercept = $state(0);
 
   const data = [
     { x: 1, y: 2 }, { x: 2, y: 3.5 }, { x: 3, y: 2.5 },
@@ -22,8 +21,8 @@
     .domain([0, 7])
     .range([height - padding, padding]);
 
-  const lineStart = { x: xScale(0), y: yScale(intercept) };
-  const lineEnd = { x: xScale(7), y: yScale(slope * 7 + intercept) };
+  let lineStart = $derived({ x: xScale(0), y: yScale(intercept) });
+  let lineEnd = $derived({ x: xScale(7), y: yScale(slope * 7 + intercept) });
 </script>
 
 <div class="space-y-4">
