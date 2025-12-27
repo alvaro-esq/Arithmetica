@@ -34,7 +34,7 @@ Respetar estrictamente la paleta de colores para mantener la identidad visual.
 
 | Variable | Hex | Uso Estricto |
 | --- | --- | --- |
-| **Paper** | `#FAF9F6` | Fondo principal. Nunca usar blanco puro (`#FFFFFF`). |
+| **Paper** | `#F4F3EF` | Fondo principal. Nunca usar blanco puro (`#FFFFFF`). |
 | **Ink** | `#222222` | Texto principal, títulos y ejes. |
 | **Klein Blue** | `#002FA7` | **SOLO** elementos interactivos (sliders, handles, toggles, hover). |
 

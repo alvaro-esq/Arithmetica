@@ -4,7 +4,21 @@
 
 @layer base {
   :root {
-    --starlight-c-bg: #FAF9F6;
+    --starlight-c-bg: #F4F3EF;
     --starlight-c-text: #222222;
+
+    /* Starlight Overrides */
+    --sl-color-bg: var(--starlight-c-bg);
+    --sl-color-bg-sidebar: var(--starlight-c-bg);
+    --sl-color-accent: #002FA7;
+    --sl-color-accent-high: #002FA7;
+    --sl-color-accent-low: #002FA7;
+    --sl-color-text-accent: #F4F3EF;
+  }
+
+  /* Estilo explícito para el elemento activo del sidebar */
+  [aria-current="page"] {
+    background-color: #002FA7 !important;
+    color: #F4F3EF !important;
   }
 }

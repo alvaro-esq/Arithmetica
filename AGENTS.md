@@ -16,7 +16,7 @@
 - Charting: d3-scale ONLY (SVG rendered by Svelte)
 
 ### Design System
-- Background: paper #FAF9F6
+- Background: paper #F4F3EF
 - Text: ink #222222
 - Interactive Accent: interactive #002FA7 (Klein Blue)
 - Klein Blue is ONLY for interactive elements (sliders, active states, draggable handles)
@@ -34,7 +34,8 @@
 
 ### Svelte Component Rules
 - Single-file components (.svelte)
-- Use reactive statements ($:) for computed values
+- Use Svelte 5 runes ($state, $derived, $effect) for reactivity
+- Do NOT use legacy Svelte 3/4 reactivity ($:) or export let
 - Use client directives in MDX (client:visible, client:load)
 - SVG rendering handled natively by Svelte
 - Use d3-scale for data-to-pixel coordinate mapping
