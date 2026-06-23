@@ -1,0 +1,221 @@
+---
+title: Árboles de Decisión y Random Forests
+description: Del índice de Gini a los bosques y el boosting, explorados con visualizaciones interactivas paso a paso.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import GiniExplorer from '../../../components/dt/GiniExplorer.svelte';
+import TreeRegionDuality from '../../../components/dt/TreeRegionDuality.svelte';
+import TreeGrower from '../../../components/dt/TreeGrower.svelte';
+import BootstrapSampler from '../../../components/dt/BootstrapSampler.svelte';
+import RandomForestVote from '../../../components/dt/RandomForestVote.svelte';
+import FeatureImportance from '../../../components/dt/FeatureImportance.svelte';
+import AdaBoostStepper from '../../../components/dt/AdaBoostStepper.svelte';
+
+Un **árbol de decisión** es un modelo de aprendizaje supervisado con forma de diagrama de flujo: cada **nodo interno** plantea una prueba sobre una característica, cada **rama** refleja un resultado de esa prueba, y cada **hoja** devuelve la predicción final. Su gran virtud es la interpretabilidad: el camino de la raíz a una hoja se lee como una secuencia de reglas `si… entonces…`.
+
+- **Nodo raíz:** el punto de partida del árbol.
+- **Nodos internos:** decisiones intermedias basadas en atributos.
+- **Hojas:** salidas finales (una clase o un valor).
+- **Ramas:** unen nodos y muestran los caminos de decisión posibles.
+
+![Estructura de un árbol y su partición del plano](/img/dt/img_tree.png)
+
+*Un árbol con los cortes $x_1 < a$, $x_2 < c$ y $x_1 < b$ y la partición del plano que induce.*
+
+## Impureza de Gini
+
+Para decidir *dónde* dividir, el algoritmo **CART** (*Classification and Regression Trees*) necesita medir cuán mezcladas están las clases en un nodo. La medida más usada es el **índice de Gini**:
+
+$$ \text{Gini}(S) = 1 - \sum_{i=1}^{n} p_i^2 $$
+
+donde $S$ es el nodo, $n$ el número de clases y $p_i$ la proporción de la clase $i$ en $S$.
+
+- Si todas las observaciones son de una misma clase, el nodo es **puro** y $\text{Gini} = 0$.
+- Si las clases están perfectamente mezcladas (50/50 en el caso binario), la impureza es **máxima** ($0.5$).
+
+Arrastra la proporción de clases para ver cómo responde la curva. Alterna entre Gini y entropía: ambas miden lo mismo (impureza), pican en $p = 0.5$ y valen $0$ en un nodo puro.
+
+<GiniExplorer client:visible />
+
+Por ejemplo, con 80 % de la clase A y 20 % de la clase B:
+
+$$ \text{Gini} = 1 - (0.8^2 + 0.2^2) = 1 - 0.68 = 0.32 $$
+
+El objetivo del entrenamiento es elegir cortes que **minimicen la impureza ponderada** de los nodos hijos:
+
+$$ \min_{\text{corte}} \; \sum_{v} \frac{|S_v|}{|S|}\,\text{Gini}(S_v) $$
+
+donde cada $S_v$ es un subconjunto resultante de la división y $\frac{|S_v|}{|S|}$ su peso. La **ganancia** de un corte es la diferencia entre la impureza del padre y esta impureza ponderada de los hijos.
+
+## Un árbol es una partición
+
+La idea clave: **un árbol de decisión con cortes alineados a los ejes es exactamente una partición del espacio en rectángulos**. Cada hoja es una región, y cada región predice una clase.
+
+En la siguiente visualización las dos vistas son el mismo objeto. **Arrastra las líneas azules** sobre el plano —cada una es un nodo del árbol— y observa cómo el diagrama de la derecha y las regiones de la izquierda cambian al unísono. Cambia también el eje del corte raíz para ver cómo se reorganiza todo.
+
+<TreeRegionDuality client:visible />
+
+Así se ve un árbol real entrenado sobre el conjunto *Titanic*, donde cada nodo muestra su condición, su índice de Gini, el número de muestras y la clase predominante:
+
+![Árbol de decisión entrenado sobre el dataset Titanic](/img/dt/img_titanic_tree.png)
+
+```python
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+clf = DecisionTreeClassifier(criterion='gini', max_depth=4)
+clf.fit(X_train, y_train)
+print("Precisión:", accuracy_score(y_test, clf.predict(X_test)))
+```
+
+## Crecer el árbol
+
+El entrenamiento es **recursivo y voraz** (*greedy*): empieza en la raíz y, en cada paso, elige la característica y el umbral que **maximizan la ganancia de Gini**. Luego repite el proceso en cada hijo hasta que se cumple un **criterio de parada**.
+
+Pulsa **Siguiente división** para construir el árbol corte a corte, o **Auto** para verlo crecer solo. Mueve los criterios de parada y observa cómo y *por qué* se detiene:
+
+<TreeGrower client:visible />
+
+Los principales criterios de parada son:
+
+- **Profundidad máxima (`max_depth`):** limita los niveles del árbol.
+- **Pureza del nodo:** se detiene si un nodo ya es suficientemente homogéneo.
+- **Mínimo de muestras para dividir (`min_samples_split`):** impide divisiones con muy pocos datos.
+- **Ganancia mínima (`min_impurity_decrease`):** descarta cortes que apenas reducen la impureza.
+- **Poda (*post-pruning*):** tras entrenar el árbol completo, se eliminan ramas que no mejoran la validación.
+
+<Aside type="caution" title="El árbol que memoriza">
+Sin criterios de parada, un árbol crece hasta aislar cada punto en su propia hoja: precisión perfecta en entrenamiento y **sobreajuste** severo. Por eso los árboles individuales tienen **varianza alta** — pequeños cambios en los datos producen árboles muy distintos. Esta debilidad es justo lo que los *ensambles* de la siguiente sección vienen a corregir.
+</Aside>
+
+**Ventajas** de los árboles: son fáciles de entender y visualizar, requieren poca preparación de datos (no necesitan normalización, toleran variables numéricas y categóricas), y sirven tanto para clasificación como para regresión. **Desventajas:** propensos al sobreajuste, varianza alta, dificultad para capturar relaciones lineales y sesgo hacia características con más niveles de división.
+
+## Bagging y Random Forest
+
+Si un solo árbol tiene varianza alta, **promediar muchos** la reduce. **Random Forest** es un ensamble de tipo *bagging* (*bootstrap aggregating*) que combina las predicciones de muchos árboles para obtener un modelo más estable y preciso. Dos ingredientes lo hacen funcionar:
+
+- **Bootstrapping:** cada árbol se entrena sobre una muestra aleatoria del dataset, tomada **con reemplazo**. Cada árbol ve datos algo distintos.
+- **Selección aleatoria de características:** en cada división se considera solo un subconjunto aleatorio de las características. Esto **descorrelaciona** los árboles, que es lo que de verdad reduce la varianza.
+
+Empecemos por el *bootstrap*. Pulsa **Nueva muestra**: algunos puntos se repiten (puntos más grandes) y, en promedio, un 37 % nunca se elige (la muestra *out-of-bag*).
+
+<BootstrapSampler client:visible />
+
+![Construcción de un Random Forest a partir de muestras bootstrap](/img/dt/img_random_forest.png)
+
+*Cada árbol se entrena sobre su propia muestra aleatoria con un subconjunto de características.*
+
+Ahora el efecto del promedio. Con **un** árbol la frontera es dentada y arbitraria; al sumar árboles, el **voto agregado** se suaviza y generaliza mejor. Alterna entre ver las fronteras individuales (la varianza que el bosque cancela) y el voto promedio:
+
+<RandomForestVote client:visible />
+
+La **predicción final** es la moda de los árboles en clasificación (votación mayoritaria) o el promedio en regresión. El resultado, comparado con otros modelos, produce fronteras escalonadas características:
+
+![Comparación de fronteras de decisión entre modelos](/img/dt/decision_boundaries_comparison.png)
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(n_estimators=100, max_depth=None, max_features='sqrt')
+rf.fit(X_train, y_train)
+y_pred = rf.predict(X_test)
+```
+
+<Aside type="tip" title="Parámetros clave">
+`n_estimators` (número de árboles: más es mejor hasta saturar), `max_features` (cuántas características considerar por división; `'sqrt'` es un buen valor por defecto), y `max_depth` / `min_samples_leaf` para controlar cada árbol.
+</Aside>
+
+## Importancia de variables
+
+Como subproducto, un Random Forest estima **qué tan útil es cada característica**. Cada vez que un corte usa una característica, se mide cuánto reduce la impureza (Gini); esas reducciones se acumulan sobre todos los árboles y se normalizan.
+
+En el siguiente ejemplo, la clase depende fuertemente de $x$, moderadamente de $y$, y nada de una tercera característica de **ruido**. Aumenta el número de árboles y observa cómo la estimación se estabiliza y el ruido queda cerca de cero:
+
+<FeatureImportance client:visible />
+
+![Importancia de características en un Random Forest](/img/dt/img_importance.png)
+
+```python
+import numpy as np
+
+importances = rf.feature_importances_
+for i in np.argsort(importances)[::-1]:
+    print(f"característica {i}: {importances[i]:.4f}")
+```
+
+## Boosting
+
+El *bagging* entrena árboles **en paralelo e independientes**. El **boosting** hace lo contrario: entrena modelos **en secuencia**, donde cada uno corrige los errores del anterior. Así, a partir de modelos débiles (típicamente *stumps*, árboles de un solo corte) se construye un clasificador fuerte.
+
+| | Random Forest (*bagging*) | Boosting |
+|---|---|---|
+| Construcción | Árboles independientes, en paralelo | Modelos secuenciales |
+| Enfoque | Reduce la **varianza** | Reduce el **sesgo** (y la varianza) |
+| Riesgo | Robusto, difícil de sobreajustar | Puede sobreajustar sin cuidado |
+
+### AdaBoost
+
+**AdaBoost** (*Adaptive Boosting*) ajusta iterativamente los **pesos de las muestras**: tras cada ronda, sube el peso de las que se clasificaron mal, de modo que el siguiente *stump* se concentre en ellas. Cada *stump* $h_t$ recibe un peso $\alpha_t$ según su acierto, y el clasificador final es la combinación ponderada:
+
+$$ H(x) = \operatorname{sign}\!\left( \sum_{t} \alpha_t\, h_t(x) \right), \qquad \alpha_t = \tfrac{1}{2}\ln\frac{1 - \varepsilon_t}{\varepsilon_t} $$
+
+donde $\varepsilon_t$ es el error ponderado de la ronda $t$. Avanza las rondas y observa cómo crecen los puntos mal clasificados (su peso) y cómo el clasificador acumulado va resolviendo un problema que ningún *stump* aislado puede:
+
+<AdaBoostStepper client:visible />
+
+```python
+from sklearn.ensemble import AdaBoostClassifier
+
+ada = AdaBoostClassifier(n_estimators=50)
+ada.fit(X_train, y_train)
+```
+
+### Gradient Boosting
+
+En lugar de reponderar muestras, el **Gradient Boosting** ajusta cada nuevo árbol a los **errores residuales** del ensamble actual, minimizando una función de pérdida diferenciable por descenso de gradiente. Es muy flexible (distintas pérdidas, clasificación y regresión) pero más sensible al ajuste de parámetros.
+
+![Visualización del algoritmo de gradient boosting](/img/dt/Visualisation-of-gradient-boosting-algorithm.png)
+
+*Ronda a ronda, cada árbol nuevo se ajusta a lo que el ensamble anterior aún no explica.*
+
+```python
+from sklearn.ensemble import GradientBoostingClassifier
+
+gb = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3)
+gb.fit(X_train, y_train)
+```
+
+### XGBoost, CatBoost y LightGBM
+
+Tres implementaciones modernas y muy usadas de gradient boosting, cada una con su énfasis:
+
+- **XGBoost** — añade **regularización** y *pruning* de árboles para controlar el sobreajuste; rapidísimo y dominante en competiciones.
+- **CatBoost** — maneja **características categóricas** de forma nativa, sin pre-codificación.
+- **LightGBM** — usa *GOSS* y *EFB* para entrenar **muy rápido** sobre conjuntos grandes con muchas características.
+
+![Comparación de algoritmos de boosting](/img/dt/img_boosting.png)
+
+```python
+import xgboost as xgb
+
+clf = xgb.XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=3,
+                        eval_metric='mlogloss')
+clf.fit(X_train, y_train)
+```
+
+<Aside type="note" title="¿Cuál elegir?">
+Para empezar, un **Random Forest** es robusto y casi no requiere ajuste. Si necesitas exprimir el máximo rendimiento, **XGBoost** o **LightGBM** suelen ganar, a cambio de afinar más parámetros. **CatBoost** brilla cuando hay muchas variables categóricas.
+</Aside>
+
+## Resumen
+
+- Un **árbol de decisión** parte el espacio en regiones mediante cortes que **minimizan el índice de Gini**; es interpretable pero de **varianza alta** y propenso al sobreajuste.
+- El **índice de Gini** $1 - \sum p_i^2$ mide la impureza; vale $0$ en un nodo puro y $0.5$ en el binario perfectamente mezclado.
+- Los **criterios de parada** (profundidad, mínimo de muestras, ganancia mínima) y la **poda** controlan la complejidad.
+- **Random Forest** promedia muchos árboles entrenados sobre muestras *bootstrap* con características aleatorias, **reduciendo la varianza** y suavizando la frontera. Además estima la **importancia de variables**.
+- El **boosting** entrena modelos **en secuencia** que corrigen los errores previos: **AdaBoost** reponderando muestras, **Gradient Boosting** ajustando residuales.
+- **XGBoost, CatBoost y LightGBM** son las implementaciones de boosting más efectivas en la práctica.
