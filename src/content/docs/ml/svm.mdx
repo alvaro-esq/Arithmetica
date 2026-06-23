@@ -1,0 +1,165 @@
+---
+title: Support Vector Machines y Kernel Methods
+description: Hiperplanos de margen máximo, soft margin y el truco del kernel, explorados de forma interactiva.
+---
+
+import MaxMarginHyperplane from '../../../components/svm/MaxMarginHyperplane.svelte';
+import SoftMarginSlack from '../../../components/svm/SoftMarginSlack.svelte';
+import KernelTrickLift from '../../../components/svm/KernelTrickLift.svelte';
+import KernelPlayground from '../../../components/svm/KernelPlayground.svelte';
+import KernelFunctionPlot from '../../../components/svm/KernelFunctionPlot.svelte';
+
+Las **Máquinas de Vectores de Soporte** (SVM) son modelos de aprendizaje supervisado usados sobre todo en clasificación. Su objetivo es encontrar un **hiperplano** que separe los datos en dos categorías maximizando el margen entre el hiperplano y los puntos más cercanos de cada clase.
+
+Esta técnica es efectiva incluso cuando las clases no son perfectamente separables: al maximizar el margen reduce el riesgo de sobreajuste y mejora la generalización a datos nuevos.
+
+## Conceptos básicos
+
+**Hiperplano.** Funciona como una frontera de decisión que divide el espacio en dos. Su dimensión depende del número de características: es una recta en 2D, un plano en 3D, y así sucesivamente.
+
+**Margen.** Es la distancia entre el hiperplano y los puntos más cercanos a él. Un margen amplio es preferible porque separa mejor las clases y reduce el sobreajuste.
+
+**Vectores de soporte.** Son los puntos críticos que tocan el borde del margen: definen la posición y orientación del hiperplano. Mover uno de ellos puede cambiar por completo la frontera; el resto de los puntos son irrelevantes para el modelo.
+
+En la siguiente visualización, gira la recta con el ángulo $\theta$ y deslízala con el sesgo $b$. Observa cómo se resaltan los vectores de soporte (los puntos más cercanos a cada lado) y cómo cambia el ancho del margen. Pulsa **Margen máximo** para saltar a la solución óptima.
+
+<MaxMarginHyperplane client:visible />
+
+## El problema de optimización
+
+Consideramos un conjunto de entrenamiento $\{(x_i, y_i)\}$, donde $x_i$ son los vectores de características y $y_i \in \{+1, -1\}$ las etiquetas. El hiperplano se define por:
+
+$$ w \cdot x + b = 0 $$
+
+donde $w$ es el vector de pesos (normal al hiperplano) y $b$ el sesgo. La función de decisión clasifica según el signo:
+
+- $w \cdot x + b > 0 \;\Rightarrow\;$ clase positiva $(+1)$
+- $w \cdot x + b < 0 \;\Rightarrow\;$ clase negativa $(-1)$
+
+Para garantizar una clasificación correcta con margen, se imponen las restricciones:
+
+$$ y_i (w \cdot x_i + b) \geq 1 \quad \text{para todo } i $$
+
+Los **vectores de soporte** son justamente los puntos donde la igualdad se cumple, $y_i (w \cdot x_i + b) = 1$. Están exactamente a una distancia $\frac{1}{\|w\|}$ del hiperplano, por lo que el **margen total** es:
+
+$$ d = \frac{2}{\|w\|} $$
+
+Maximizar el margen equivale, por tanto, a **minimizar** $\|w\|$. Por conveniencia matemática (convexidad y diferenciabilidad) se minimiza:
+
+$$ \min_{w, b} \; \frac{1}{2} \|w\|^2 \quad \text{sujeto a} \quad y_i (w \cdot x_i + b) \geq 1 $$
+
+Este es un problema de optimización convexa con restricciones lineales. Se resuelve con **multiplicadores de Lagrange**, transformándolo en un problema sin restricciones:
+
+$$ L(w, b, \alpha) = \frac{1}{2} \|w\|^2 - \sum_{i=1}^{l} \alpha_i \left[ y_i (w \cdot x_i + b) - 1 \right] $$
+
+donde los $\alpha_i \geq 0$ son los multiplicadores. En la solución, solo los vectores de soporte tienen $\alpha_i > 0$.
+
+## Soft Margin SVM
+
+El modelo anterior (*hard margin*) supone que los datos son perfectamente separables, algo poco realista cuando hay ruido o *outliers*. El **soft margin** introduce variables de holgura $\xi_i \geq 0$ que permiten violar el margen:
+
+$$ y_i (w \cdot x_i + b) \geq 1 - \xi_i $$
+
+Cada $\xi_i = \max(0,\, 1 - y_i(w \cdot x_i + b))$ mide cuánto se desvía un punto de su margen ideal. El problema pasa a ser:
+
+$$ \min_{w, b} \; \frac{1}{2} \|w\|^2 + C \sum_{i=1}^{l} \xi_i $$
+
+El parámetro $C$ controla el equilibrio entre un **margen amplio** ($\frac{1}{2}\|w\|^2$ pequeño) y la **penalización por violaciones** ($C \sum \xi_i$). Un $C$ alto prioriza clasificar bien cada punto de entrenamiento; un $C$ bajo favorece un margen más ancho con más tolerancia.
+
+Mueve el deslizador de $C$ y observa cómo se recalcula la recta óptima. Los segmentos azules muestran la holgura $\xi_i$ de cada punto que cae dentro del margen o del lado equivocado, y las cifras de abajo desglosan los dos términos del objetivo.
+
+<SoftMarginSlack client:visible />
+
+## El truco del kernel
+
+Muchas veces los datos **no son separables linealmente** en su espacio original. El **truco del kernel** mapea los datos a un espacio de mayor dimensión donde sí pueden separarse con un hiperplano, calculando las operaciones necesarias **solo mediante funciones kernel**, sin transformar explícitamente cada punto.
+
+La idea es más clara con un ejemplo en 1D: los puntos de una clase rodean a los de la otra sobre una recta, así que ningún umbral los separa. Al elevarlos con $\varphi(x) = (x, x^2)$ caen sobre una parábola en 2D, donde una recta horizontal **sí** los separa. Pulsa **Elevar** para ver la transformación.
+
+<KernelTrickLift client:visible />
+
+La función de decisión de un SVM con kernel se escribe en términos de los vectores de soporte:
+
+$$ f(x) = \sum_{i} \alpha_i \, y_i \, K(x_i, x) + b $$
+
+donde $K(\cdot,\cdot)$ es la función kernel. A continuación se describen las cuatro más comunes.
+
+## Tipos de kernel
+
+Experimenta directamente: elige un conjunto de datos y un kernel, y observa cómo cambian las regiones de decisión. Por defecto cada punto contribuye a la frontera; pulsa **Entrenar SVM real** para obtener la solución dispersa y ver qué puntos son realmente vectores de soporte.
+
+<KernelPlayground client:visible />
+
+### Kernel lineal
+
+$$ K(x, x') = x^T x' $$
+
+La forma más simple: el producto interno en el espacio original. Útil cuando los datos ya son linealmente separables y mantiene el coste computacional bajo.
+
+```python
+from sklearn.svm import SVC
+
+clf = SVC(kernel='linear')
+clf.fit(X_train, y_train)
+predictions = clf.predict(X_test)
+```
+
+### Kernel polinomial
+
+$$ K(x, x') = (1 + x^T x')^d $$
+
+Captura interacciones entre características hasta el grado $d$, modelando no solo las características individuales sino también sus combinaciones.
+
+```python
+from sklearn.svm import SVC
+
+clf = SVC(kernel='poly', degree=3)  # grado del polinomio
+clf.fit(X_train, y_train)
+predictions = clf.predict(X_test)
+```
+
+### Kernel RBF (Gaussiano)
+
+$$ K(x, x') = \exp(-\gamma \|x - x'\|^2) $$
+
+Muy efectivo cuando la relación es altamente no lineal. El parámetro $\gamma$ controla el alcance de cada punto: transforma el espacio a una dimensión infinita, dando gran flexibilidad. En el *playground*, prueba el kernel RBF sobre los círculos concéntricos: un $\gamma$ pequeño produce regiones amplias y suaves; uno grande, islas ajustadas a cada punto.
+
+```python
+from sklearn.svm import SVC
+
+clf = SVC(kernel='rbf', gamma='scale')  # 'scale' o 'auto'
+clf.fit(X_train, y_train)
+predictions = clf.predict(X_test)
+```
+
+### Kernel sigmoide
+
+$$ K(x, x') = \tanh(\alpha \, x^T x' + c) $$
+
+Produce un resultado similar a las funciones de activación de las redes neuronales. La curva $\tanh$ siguiente muestra cómo $\alpha$ controla la pendiente y $c$ el desplazamiento horizontal.
+
+<KernelFunctionPlot client:visible />
+
+```python
+from sklearn.svm import SVC
+
+clf = SVC(kernel='sigmoid')
+clf.fit(X_train, y_train)
+predictions = clf.predict(X_test)
+```
+
+### Configuración de gamma en el kernel RBF
+
+- **`'scale'`** ajusta $\gamma = \dfrac{1}{n_{\text{features}} \cdot \operatorname{var}(X)}$. Normaliza la influencia de cada característica y suele evitar el sobreajuste.
+- **`'auto'`** fija $\gamma = \dfrac{1}{n_{\text{features}}}$. Más simple, pero puede no adaptarse bien a la variabilidad de los datos.
+
+**Recomendación:** prefiere `'scale'` para datos con alta variabilidad; usa `'auto'` con datos bien escalados o cuando busques un enfoque más sencillo.
+
+## Resumen
+
+- SVM busca el hiperplano que separa dos clases **maximizando el margen** hasta los vectores de soporte más cercanos.
+- Los **vectores de soporte** son los únicos puntos que determinan la frontera ($\alpha_i > 0$); el resto no influye.
+- El modelo minimiza $\frac{1}{2}\|w\|^2$ sujeto a $y_i(w \cdot x_i + b) \geq 1$.
+- **Soft margin** usa holguras $\xi_i$ y el parámetro $C$ para manejar datos imperfectamente separables.
+- El **truco del kernel** permite clasificar datos no lineales mapeándolos implícitamente a un espacio de mayor dimensión.
+- Elegir el kernel adecuado (lineal, polinomial, RBF, sigmoide) y ajustar sus parámetros requiere experimentación.

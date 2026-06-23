@@ -66,15 +66,37 @@ El sitio estará disponible en `http://localhost:4321`.
 ```text
 src/
 ├── components/          # Componentes Interactivos (Svelte)
-│   └── InteractiveRegression.svelte
+│   ├── InteractiveRegression.svelte
+│   └── svm/             # Visualizaciones del tema SVM
+│       ├── MaxMarginHyperplane.svelte
+│       ├── SoftMarginSlack.svelte
+│       ├── KernelTrickLift.svelte
+│       ├── KernelPlayground.svelte
+│       └── KernelFunctionPlot.svelte
+├── lib/
+│   └── svm/             # Lógica matemática compartida (TS puro, testeable)
+│       ├── prng.ts          # PRNG sembrado (mulberry32) + Box–Muller
+│       ├── datasets.ts      # blobs / circles / moons / interval1d
+│       ├── kernels.ts       # los 4 kernels + decisionFunction
+│       ├── geometry.ts      # lineSegment, signedDistance, clientToData…
+│       ├── solvers.ts       # Pegasos (lineal) + SMO simplificado (kernel)
+│       ├── drag.ts          # acción Svelte `draggablePoints` (reutilizable)
+│       └── colors.ts        # tokens de color del tema
 ├── content/
 │   └── docs/            # Páginas del libro (MDX)
 │       ├── index.mdx
 │       └── ml/
-│           └── linear-regression.mdx
+│           ├── linear-regression.mdx
+│           └── svm.mdx
 └── styles/              # CSS global (Tailwind directives)
 
 ```
+
+> **Patrón clave:** toda la matemática vive en `src/lib/svm/` (TypeScript puro,
+> determinista y verificable por separado) y los componentes `.svelte` solo
+> hacen render SVG + reactividad. Esto mantiene los componentes pequeños y
+> permite que varias visualizaciones reusen los mismos solvers, kernels y la
+> acción de arrastre.
 
 ---
 

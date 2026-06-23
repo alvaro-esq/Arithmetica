@@ -27,6 +27,7 @@ export default defineConfig({
         { label: "Introduction", link: "/" },
         { label: "Machine Learning", link: "ml/" },
         { label: "Linear Regression", link: "ml/linear-regression/" },
+        { label: "Support Vector Machines y Kernel Methods", link: "ml/svm/" },
       ],
     }),
     svelte(),
