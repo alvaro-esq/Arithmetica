@@ -1,7 +1,7 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
   import { mulberry32 } from '../../lib/svm/prng';
-  import { POS, NEG, ACCENT, PAPER } from '../../lib/svm/colors';
+  import { POS, NEG, ACCENT, PAPER, AXIS } from '../../lib/svm/colors';
   import { bootstrapIndices } from '../../lib/dt/ensemble';
   import { blobs } from '../../lib/dt/datasets';
 
@@ -36,7 +36,7 @@
 <div class="space-y-4">
   <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
     <div class="space-y-2">
-      <p class="text-xs font-medium uppercase tracking-wide text-[#888]">Conjunto original</p>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted">Conjunto original</p>
       <svg viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid meet" class="w-full aspect-[36/25]">
         {#each data as p}
           <circle
@@ -52,7 +52,7 @@
     </div>
 
     <div class="space-y-2">
-      <p class="text-xs font-medium uppercase tracking-wide text-[#888]">Muestra bootstrap</p>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted">Muestra bootstrap</p>
       <svg viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid meet" class="w-full aspect-[36/25]">
         {#each data as p, i}
           {@const m = multiplicity[i]}
@@ -62,7 +62,7 @@
             r={radius(m)}
             fill={m === 0 ? 'none' : p.label === 1 ? POS : NEG}
             fill-opacity={m === 0 ? 0 : 0.9}
-            stroke={m === 0 ? '#BBB' : PAPER}
+            stroke={m === 0 ? AXIS : PAPER}
             stroke-width={m === 0 ? 1.2 : 1.4}
             stroke-dasharray={m === 0 ? '3 3' : 'none'}
           />
@@ -96,7 +96,7 @@
       Nueva muestra
     </button>
   </div>
-  <p class="text-xs text-[#666]">
+  <p class="text-xs text-muted">
     El tamaño de cada punto indica cuántas veces fue seleccionado. Los puntos punteados nunca
     salieron: son la muestra <em>out-of-bag</em>, útil para estimar el error sin un conjunto de
     validación aparte.

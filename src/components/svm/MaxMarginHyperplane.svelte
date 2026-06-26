@@ -3,10 +3,12 @@
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
   import { blobs } from '../../lib/svm/datasets';
-  import { lineSegment, signedDistance, norm, type Domain } from '../../lib/svm/geometry';
+  import { lineSegment, signedDistance, norm, clamp, type Domain } from '../../lib/svm/geometry';
   import { draggablePoints } from '../../lib/svm/drag';
   import { pegasos } from '../../lib/svm/solvers';
   import { POS, NEG, ACCENT, AXIS, PAPER } from '../../lib/svm/colors';
+  import Celebrate from '../ui/Celebrate.svelte';
+  import { markComplete } from '../../lib/progress';
 
   // Drag the points or rotate / shift the decision line and watch the margin.
   // Support vectors (the closest point on each side) light up; the margin band
@@ -63,11 +65,27 @@
     return Math.abs(dists[i] - side) < 0.04;
   }
 
+  let celebrate = $state(false);
   function snapToMax() {
     const m = pegasos(points, 1e6); // large C ≈ hard margin
     const nrm = norm(m.w) || 1;
-    thetaT.set(Math.atan2(m.w.y, m.w.x));
-    offsetT.set(m.b / nrm);
+    // The line is identical under (w,b) → (−w,−b); fold the angle into the slider's
+    // [0, π] range (negating the offset with it) so the thumb/label stay in sync.
+    let th = Math.atan2(m.w.y, m.w.x);
+    let off = m.b / nrm;
+    if (th < 0) {
+      th += Math.PI;
+      off = -off;
+    }
+    thetaT.set(th);
+    offsetT.set(clamp(off, -3, 3));
+    // Milestone: the optimum actually separates the data. Celebrate the peak.
+    const solved = points.every((p) => p.label * signedDistance(m.w, m.b, p) > 0);
+    if (solved) {
+      markComplete('svm-margin');
+      celebrate = false;
+      queueMicrotask(() => (celebrate = true)); // re-arm the rising edge
+    }
   }
 
   // Dragging is handled by the shared `draggablePoints` action.
@@ -88,7 +106,7 @@
     use:draggablePoints={dragCfg}
     viewBox="0 0 {width} {height}"
     preserveAspectRatio="xMidYMid meet"
-    class="w-full touch-none select-none aspect-[3/2]"
+    class="w-full touch-none select-none aspect-[3/2] animate-fade-up"
   >
     <line x1={pad} y1={yScale(0)} x2={width - pad} y2={yScale(0)} stroke={AXIS} stroke-width="1.5" />
     <line x1={xScale(0)} y1={pad} x2={xScale(0)} y2={height - pad} stroke={AXIS} stroke-width="1.5" />
@@ -123,7 +141,7 @@
     {/each}
   </svg>
 
-  <p class="text-xs text-[#666]">Arrastra los puntos para ver cómo cambian los vectores de soporte y el margen.</p>
+  <p class="text-xs text-muted">Arrastra los puntos para ver cómo cambian los vectores de soporte y el margen.</p>
 
   <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
     <label class="block text-sm font-medium text-ink">
@@ -140,10 +158,17 @@
     <span>
       Ancho del margen:
       <strong style="color: {ACCENT}">{allCorrect ? margin.toFixed(3) : '—'}</strong>
-      {#if !allCorrect}<span class="text-[#C0492B]"> (hay puntos mal clasificados)</span>{/if}
+      {#if !allCorrect}<span class="text-copper"> (hay puntos mal clasificados)</span>{/if}
     </span>
-    <button onclick={snapToMax} class="rounded-md px-4 py-2 text-sm font-medium text-paper" style="background-color: {ACCENT}">
-      Margen máximo
-    </button>
+    <div class="flex items-center gap-3">
+      <Celebrate active={celebrate} label="¡Margen máximo!" />
+      <button
+        onclick={snapToMax}
+        class="rounded-md px-4 py-2 text-sm font-medium text-paper shadow-card hover:shadow-card-hover hover:bg-interactive-soft"
+        style="background-color: {ACCENT}"
+      >
+        Margen máximo
+      </button>
+    </div>
   </div>
 </div>

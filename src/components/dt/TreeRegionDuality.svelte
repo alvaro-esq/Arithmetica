@@ -1,9 +1,10 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
   import { clientToData, clamp } from '../../lib/svm/geometry';
-  import { POS, NEG, ACCENT, AXIS, PAPER } from '../../lib/svm/colors';
+  import { POS, NEG, ACCENT, AXIS, PAPER, MUTED } from '../../lib/svm/colors';
   import { gini, tally } from '../../lib/dt/impurity';
   import { classify } from '../../lib/dt/cart';
+  import { gridCells } from '../../lib/viz/grid';
   import { layoutTree } from '../../lib/dt/layout';
   import type { Feature, LPoint, TreeNode } from '../../lib/dt/types';
   import { mulberry32, makeGaussian } from '../../lib/svm/prng';
@@ -110,28 +111,16 @@
   const xScale = scaleLinear().domain([dom.xMin, dom.xMax]).range([pad, W - pad]);
   const yScale = scaleLinear().domain([dom.yMin, dom.yMax]).range([W - pad, pad]);
   const GRID = 40;
-  const cw = (dom.xMax - dom.xMin) / GRID;
 
-  const cells = $derived.by(() => {
-    const out: { x: number; y: number; w: number; h: number; fill: string }[] = [];
-    for (let gy = 0; gy < GRID; gy++) {
-      for (let gx = 0; gx < GRID; gx++) {
-        const px = dom.xMin + (gx + 0.5) * cw;
-        const py = dom.yMin + (gy + 0.5) * cw;
-        const c = classify(tree, { x: px, y: py });
-        const x0 = dom.xMin + gx * cw;
-        const y0 = dom.yMin + gy * cw;
-        out.push({
-          x: xScale(x0),
-          y: yScale(y0 + cw),
-          w: xScale(x0 + cw) - xScale(x0) + 0.6,
-          h: yScale(y0) - yScale(y0 + cw) + 0.6,
-          fill: c === 1 ? POS : NEG,
-        });
-      }
-    }
-    return out;
-  });
+  const cells = $derived.by(() =>
+    gridCells(dom, GRID, xScale, yScale).map((c) => ({
+      x: c.x,
+      y: c.y,
+      w: c.w,
+      h: c.h,
+      fill: classify(tree, { x: c.cx, y: c.cy }) === 1 ? POS : NEG,
+    })),
+  );
 
   // The three split lines as draggable handles. Each carries which parameter it sets.
   type Handle = { id: string; feature: Feature; thr: number; lo: number; hi: number };
@@ -206,7 +195,7 @@
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
     <!-- region plot -->
     <div class="space-y-2">
-      <p class="text-xs font-medium uppercase tracking-wide text-[#888]">Particiones del plano</p>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted">Particiones del plano</p>
       <svg
         bind:this={svgEl}
         onpointerdown={onDown}
@@ -262,7 +251,7 @@
 
     <!-- tree diagram -->
     <div class="space-y-2">
-      <p class="text-xs font-medium uppercase tracking-wide text-[#888]">Árbol equivalente</p>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted">Árbol equivalente</p>
       <svg viewBox="0 0 {TW} {TH}" preserveAspectRatio="xMidYMid meet" class="w-full aspect-[6/5]">
         {#each layout.edges as e}
           <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={AXIS} stroke-width="1.5" />
@@ -271,7 +260,7 @@
             y={(e.y1 + e.y2) / 2 - 3}
             text-anchor="middle"
             font-size="12"
-            fill="#999"
+            fill={MUTED}
           >
             {e.label}
           </text>
@@ -324,7 +313,7 @@
       </button>
     </div>
   </div>
-  <p class="text-xs text-[#666]">
+  <p class="text-xs text-muted">
     Arrastra las líneas azules: cada una es un nodo del árbol. Mueve el corte raíz y observa
     cómo se reorganiza todo el árbol y la partición a la vez.
   </p>

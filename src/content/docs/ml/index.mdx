@@ -1,8 +1,27 @@
 ---
 title: Machine Learning
-description: Statistical learning fundamentals
+description: Fundamentos de aprendizaje estadístico, explorados de forma interactiva.
 ---
 
-Overview of machine learning concepts and interactive explorations.
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-- **Linear Regression**: Simple linear models and least squares estimation
+Una colección de lecciones interactivas sobre aprendizaje estadístico. Cada tema
+combina la teoría con visualizaciones que puedes manipular en tiempo real.
+
+<CardGrid>
+  <LinkCard
+    title="Regresión Lineal"
+    description="Ajusta una recta a los datos y minimiza el error cuadrático moviendo pendiente e intercepto."
+    href="/ml/linear-regression/"
+  />
+  <LinkCard
+    title="Árboles de Decisión y Random Forests"
+    description="Del índice de Gini a los bosques y el boosting, paso a paso."
+    href="/ml/decision-trees/"
+  />
+  <LinkCard
+    title="Support Vector Machines y Kernels"
+    description="Hiperplanos de margen máximo, soft margin y el truco del kernel."
+    href="/ml/svm/"
+  />
+</CardGrid>

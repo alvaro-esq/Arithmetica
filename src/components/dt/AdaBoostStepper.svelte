@@ -1,9 +1,10 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
-  import { POS, NEG, ACCENT, AXIS, PAPER } from '../../lib/svm/colors';
+  import { POS, NEG, ACCENT, AXIS, PAPER, MUTED } from '../../lib/svm/colors';
   import { adaBoost, boostScore, boostAccuracy } from '../../lib/dt/boosting';
   import type { LPoint } from '../../lib/dt/types';
   import { mulberry32, makeGaussian } from '../../lib/svm/prng';
+  import { gridCells } from '../../lib/viz/grid';
 
   // Watch boosting work: each round fits a stump (a single split), grows the weight
   // of the points it misclassifies, and adds its weighted vote to the cumulative
@@ -38,6 +39,7 @@
 
   function play() {
     if (playing) return; // re-entrancy guard
+    if (round >= ROUNDS - 1) round = 0; // replay from the start instead of dead-ending
     playing = true;
     const tick = () => {
       if (!playing) return;
@@ -71,38 +73,20 @@
   const xScale = scaleLinear().domain([dom.xMin, dom.xMax]).range([pad, W - pad]);
   const yScale = scaleLinear().domain([dom.yMin, dom.yMax]).range([W - pad, pad]);
   const GRID = 46;
-  const cw = (dom.xMax - dom.xMin) / GRID;
 
   // cumulative strong-classifier regions up to current round
   const cells = $derived.by(() => {
-    const out: { x: number; y: number; w: number; h: number; fill: string; op: number }[] = [];
-    let maxAbs = 1e-9;
-    const raw: number[] = new Array(GRID * GRID);
-    for (let gy = 0; gy < GRID; gy++) {
-      for (let gx = 0; gx < GRID; gx++) {
-        const px = dom.xMin + (gx + 0.5) * cw;
-        const py = dom.yMin + (gy + 0.5) * cw;
-        const s = boostScore(boost, round, { x: px, y: py });
-        raw[gy * GRID + gx] = s;
-        if (Math.abs(s) > maxAbs) maxAbs = Math.abs(s);
-      }
-    }
-    for (let gy = 0; gy < GRID; gy++) {
-      for (let gx = 0; gx < GRID; gx++) {
-        const s = raw[gy * GRID + gx];
-        const x0 = dom.xMin + gx * cw;
-        const y0 = dom.yMin + gy * cw;
-        out.push({
-          x: xScale(x0),
-          y: yScale(y0 + cw),
-          w: xScale(x0 + cw) - xScale(x0) + 0.6,
-          h: yScale(y0) - yScale(y0 + cw) + 0.6,
-          fill: s >= 0 ? POS : NEG,
-          op: 0.05 + 0.25 * Math.min(1, Math.abs(s) / maxAbs),
-        });
-      }
-    }
-    return out;
+    const base = gridCells(dom, GRID, xScale, yScale);
+    const scores = base.map((c) => boostScore(boost, round, { x: c.cx, y: c.cy }));
+    const maxAbs = Math.max(1e-9, ...scores.map(Math.abs));
+    return base.map((c, i) => ({
+      x: c.x,
+      y: c.y,
+      w: c.w,
+      h: c.h,
+      fill: scores[i] >= 0 ? POS : NEG,
+      op: 0.05 + 0.25 * Math.min(1, Math.abs(scores[i]) / maxAbs),
+    }));
   });
 
   // the round's stump as a line
@@ -116,14 +100,16 @@
   // Cumulative-accuracy sparkline: accuracy of the strong classifier after each
   // round up to the current one. This rises toward 1 (the boosting payoff), unlike
   // the per-round stump error which stays flat-high and reads as "not working".
-  const accPath = $derived(
+  const accPts = $derived(
     Array.from({ length: round + 1 }, (_, i) => {
       const acc = boostAccuracy(boost, i, data);
       const sx = 6 + (i / Math.max(1, ROUNDS - 1)) * 108;
       const sy = 44 - acc * 36; // accuracy 0..1 → y in [44, 8]
       return `${sx},${sy}`;
-    }).join(' '),
+    }),
   );
+  // A polyline with one point draws nothing; duplicate it so round 0 shows a dot.
+  const accPath = $derived((accPts.length === 1 ? [accPts[0], accPts[0]] : accPts).join(' '));
 
   function radius(w: number): number {
     return 3.5 + (w / maxW) * 9;
@@ -173,7 +159,7 @@
       <svg viewBox="0 0 120 50" class="mt-1 w-40">
         <line x1="6" y1="44" x2="114" y2="44" stroke={AXIS} stroke-width="1" />
         <polyline points={accPath} fill="none" stroke={ACCENT} stroke-width="1.5" />
-        <text x="6" y="10" font-size="8" fill="#999">precisión acumulada por ronda</text>
+        <text x="6" y="10" font-size="8" fill={MUTED}>precisión acumulada por ronda</text>
       </svg>
     </div>
   </div>
@@ -202,11 +188,10 @@
     </button>
     <button
       onclick={playing ? stop : play}
-      disabled={round >= ROUNDS - 1 && !playing}
-      class="rounded-md px-4 py-2 text-sm font-medium disabled:opacity-40"
+      class="rounded-md px-4 py-2 text-sm font-medium hover:bg-interactive hover:text-paper"
       style="border: 1px solid {ACCENT}; color: {NEG}"
     >
-      {playing ? 'Pausar' : 'Auto'}
+      {playing ? 'Pausar' : round >= ROUNDS - 1 ? 'Repetir' : 'Auto'}
     </button>
     <button
       onclick={() => {
@@ -219,7 +204,7 @@
       Reiniciar
     </button>
   </div>
-  <p class="text-xs text-[#666]">
+  <p class="text-xs text-muted">
     El tamaño de cada punto es su peso actual: los mal clasificados crecen ronda a ronda, forzando
     al siguiente stump a atenderlos. El sombreado es el clasificador fuerte acumulado.
   </p>

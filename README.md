@@ -28,15 +28,26 @@ El proyecto evita la sobreingeniería. Utilizamos herramientas modernas enfocada
 
 ---
 
-## 🎨 Design System
+## 🎨 Design System — "Ink & Copper"
 
-Respetar estrictamente la paleta de colores para mantener la identidad visual.
+Los tokens de color viven en **un solo lugar** (`src/lib/svm/colors.ts`, reflejado
+en `tailwind.config.mjs` y `src/styles/global.css`). Impórtalos; nunca escribas
+hex en el marcado.
 
-| Variable | Hex | Uso Estricto |
+| Token | Hex | Uso |
 | --- | --- | --- |
-| **Paper** | `#F4F3EF` | Fondo principal. Nunca usar blanco puro (`#FFFFFF`). |
-| **Ink** | `#222222` | Texto principal, títulos y ejes. |
-| **Klein Blue** | `#002FA7` | **SOLO** elementos interactivos (sliders, handles, toggles, hover). |
+| **paper** | `#F5F3EE` | Fondo off-white cálido. Nunca blanco puro. |
+| **paper-raised** | `#FBFAF6` | Tarjetas y superficies elevadas. |
+| **ink** | `#1F1D1B` | Texto principal, títulos. |
+| **muted** | `#7A756B` | Texto secundario, etiquetas. |
+| **interactive** | `#1A3A6B` | Azul tinta. Controles, CTAs, geometría interactiva. |
+| **copper / slate** | `#B5532A` / `#3B4252` | Las dos clases de datos en las visualizaciones. |
+| **success** | `#2E7D52` | Checkmarks, completitud, micro-celebraciones. |
+| **line / axis** | `#E3DFD4` / `#CFC9BA` | Bordes / ejes y gridlines. |
+
+Las buenas prácticas de UI/UX están documentadas en
+[`docs/ui-ux-principles.md`](docs/ui-ux-principles.md) y codificadas en el skill
+`ui-ux`. Toda animación respeta `prefers-reduced-motion`.
 
 ---
 

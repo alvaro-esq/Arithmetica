@@ -6,6 +6,9 @@
   import { layoutTree } from '../../lib/dt/layout';
   import type { BuildOpts, LPoint, TreeNode } from '../../lib/dt/types';
   import { moons, xor, blobs } from '../../lib/dt/datasets';
+  import { gridCells } from '../../lib/viz/grid';
+  import Celebrate from '../ui/Celebrate.svelte';
+  import { markComplete } from '../../lib/progress';
 
   // "Grow the tree" one greedy split at a time. Watch the partition refine and the
   // tree deepen; the stopping-criteria sliders show exactly when growth halts.
@@ -39,6 +42,9 @@
   let timer: ReturnType<typeof setTimeout> | null = null;
   let playing = $state(false);
 
+  let celebrate = $state(false);
+  let celebrated = false; // fire the milestone once per grown tree
+
   // Reset whenever the dataset or any stopping criterion changes.
   $effect(() => {
     datasetName;
@@ -49,6 +55,8 @@
     tree = rootLeaf(data);
     justSplit = null;
     exhausted = false;
+    celebrate = false;
+    celebrated = false;
   });
 
   function step() {
@@ -88,6 +96,24 @@
     data.filter((p) => classify(tree, p) === p.label).length / (data.length || 1),
   );
 
+  // Section complete once the learner has actually grown the tree to a stopping
+  // point (or perfect accuracy) — reachable with default sliders, where growth
+  // naturally halts at ~94% on moons.
+  $effect(() => {
+    if (stats.depth > 0 && (exhausted || accuracy >= 0.999)) {
+      markComplete('dt-growing');
+    }
+  });
+
+  // Celebration is reserved for the genuine peak: a tree that classifies every
+  // point. Fire once per grown tree.
+  $effect(() => {
+    if (!celebrated && stats.depth > 0 && accuracy >= 0.999) {
+      celebrated = true;
+      celebrate = true;
+    }
+  });
+
   const stopReason = $derived.by(() => {
     if (!exhausted) return null;
     // Inspect the frontier leaves (routing the data to each) and report which
@@ -122,28 +148,16 @@
   const xScale = scaleLinear().domain([dom.xMin, dom.xMax]).range([pad, W - pad]);
   const yScale = scaleLinear().domain([dom.yMin, dom.yMax]).range([W - pad, pad]);
   const GRID = 44;
-  const cw = (dom.xMax - dom.xMin) / GRID;
 
-  const cells = $derived.by(() => {
-    const out: { x: number; y: number; w: number; h: number; fill: string }[] = [];
-    for (let gy = 0; gy < GRID; gy++) {
-      for (let gx = 0; gx < GRID; gx++) {
-        const px = dom.xMin + (gx + 0.5) * cw;
-        const py = dom.yMin + (gy + 0.5) * cw;
-        const c = classify(tree, { x: px, y: py });
-        const x0 = dom.xMin + gx * cw;
-        const y0 = dom.yMin + gy * cw;
-        out.push({
-          x: xScale(x0),
-          y: yScale(y0 + cw),
-          w: xScale(x0 + cw) - xScale(x0) + 0.6,
-          h: yScale(y0) - yScale(y0 + cw) + 0.6,
-          fill: c === 1 ? POS : NEG,
-        });
-      }
-    }
-    return out;
-  });
+  const cells = $derived.by(() =>
+    gridCells(dom, GRID, xScale, yScale).map((c) => ({
+      x: c.x,
+      y: c.y,
+      w: c.w,
+      h: c.h,
+      fill: classify(tree, { x: c.cx, y: c.cy }) === 1 ? POS : NEG,
+    })),
+  );
 
   // --- tree diagram ---------------------------------------------------------
   const TW = 360;
@@ -154,7 +168,7 @@
 <div class="space-y-4">
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
     <div class="space-y-2">
-      <p class="text-xs font-medium uppercase tracking-wide text-[#888]">Regiones de decisión</p>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted">Regiones de decisión</p>
       <svg viewBox="0 0 {W} {W}" preserveAspectRatio="xMidYMid meet" class="w-full aspect-square">
         {#each cells as c}
           <rect x={c.x} y={c.y} width={c.w} height={c.h} fill={c.fill} fill-opacity="0.13" />
@@ -173,7 +187,7 @@
     </div>
 
     <div class="space-y-2">
-      <p class="text-xs font-medium uppercase tracking-wide text-[#888]">Árbol</p>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted">Árbol</p>
       <svg viewBox="0 0 {TW} {TH}" preserveAspectRatio="xMidYMid meet" class="w-full aspect-[6/5]">
         {#each layout.edges as e}
           <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={AXIS} stroke-width="1.4" />
@@ -213,7 +227,7 @@
     <button
       onclick={step}
       disabled={exhausted}
-      class="rounded-md px-4 py-2 text-sm font-medium text-paper disabled:opacity-40"
+      class="rounded-md px-4 py-2 text-sm font-medium text-paper shadow-card hover:bg-interactive-soft hover:shadow-card-hover disabled:opacity-40 disabled:shadow-none"
       style="background-color: {ACCENT}"
     >
       Siguiente división
@@ -221,14 +235,14 @@
     <button
       onclick={playing ? stop : play}
       disabled={exhausted}
-      class="rounded-md px-4 py-2 text-sm font-medium disabled:opacity-40"
+      class="rounded-md px-4 py-2 text-sm font-medium hover:bg-interactive hover:text-paper disabled:opacity-40"
       style="border: 1px solid {ACCENT}; color: {NEG}"
     >
       {playing ? 'Pausar' : 'Auto'}
     </button>
     <select
       bind:value={datasetName}
-      class="rounded border border-[#CFCDC4] bg-paper px-2 py-1.5 text-sm"
+      class="rounded border border-line bg-paper px-2 py-1.5 text-sm hover:border-interactive"
     >
       <option value="moons">Dos lunas</option>
       <option value="xor">XOR</option>
@@ -236,12 +250,15 @@
     </select>
     <span class="text-sm text-ink">
       Prof. <strong>{stats.depth}</strong> · Hojas <strong>{stats.leaves}</strong> · Precisión
-      <strong style="color: {ACCENT}">{(accuracy * 100).toFixed(0)}%</strong>
+      <strong style="color: {accuracy >= 0.999 ? 'var(--c-success)' : ACCENT}"
+        >{(accuracy * 100).toFixed(0)}%</strong
+      >
     </span>
+    <Celebrate active={celebrate} label="¡Árbol perfecto!" />
   </div>
 
   {#if stopReason}
-    <p class="text-xs text-[#666]">Crecimiento detenido: {stopReason}.</p>
+    <p class="text-xs text-muted">Crecimiento detenido: {stopReason}.</p>
   {/if}
 
   <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">

@@ -42,15 +42,16 @@ Two more conventions for these components:
 ### Styling system
 
 - Tailwind is wired via `@astrojs/tailwind` with `applyBaseStyles: false` — base styles come from Starlight, not Tailwind's reset.
-- The brand palette lives in `tailwind.config.mjs` as named colors: `paper` (#F4F3EF), `ink` (#222222), `interactive` (#002FA7). Use these utilities (`bg-paper`, `text-ink`, `accent-interactive`) rather than hex literals in markup.
-- Global CSS and Starlight theme variable overrides are in `src/styles/global.css` (registered as `customCss` in `astro.config.mjs`).
+- The "Ink & Copper" palette has ONE source of truth: `src/lib/svm/colors.ts`, mirrored in `tailwind.config.mjs` (named utilities: `paper`, `paper-raised`, `ink`, `muted`, `interactive`, `copper`, `slate`, `success`, `warn`, `line`, `axis`) and `src/styles/global.css` (CSS vars `--c-*`). Import the tokens / use the utilities — never hardcode hex in markup.
+- Global CSS and Starlight theme variable overrides are in `src/styles/global.css` (registered as `customCss` in `astro.config.mjs`). It also holds the global `prefers-reduced-motion` reset and the `:focus-visible` rule.
+- **UI/UX:** follow `docs/ui-ux-principles.md` and the `ui-ux` skill. Reusable UX primitives live in `src/components/ui/` (`Celebrate`, `LessonProgress`, `SectionComplete`, `Skeleton`, `LessonCard`); learning progress is persisted via `src/lib/progress.ts` (localStorage, SSR-guarded).
 
 ## Project conventions (enforced, not optional)
 
 These come from the README and AGENTS.md and define the project's identity — respect them:
 
-- **Klein Blue (`#002FA7` / `interactive`) is reserved for interactive elements only** — sliders, draggable handles, active/hover states. Never for static borders, backgrounds, or decoration.
-- **Never use pure white (`#FFFFFF`)** for backgrounds — `paper` is the base.
+- **The ink-blue `interactive` (`#1A3A6B`)** is the primary accent — interactive controls, CTAs, and the decision geometry the user manipulates. `success` (`#2E7D52`) signals completion/celebration; `copper`/`slate` are the two data classes.
+- **Never use pure white (`#FFFFFF`)** for backgrounds — `paper` (`#F5F3EE`) is the base, `paper-raised` for elevated surfaces.
 - **Charting is d3-scale ONLY.** Use `d3-scale` for data→pixel mapping and render SVG natively inside Svelte (`<svg viewBox=...>`). Do **not** add `d3-axis`, `d3-selection`, `d3-shape`, or any heavy charting library (Plotly, Chart.js, Recharts, Highcharts).
 - **Svelte 5 runes only.** Use `$state`, `$derived`, `$effect`. Do NOT use legacy reactivity (`$:`) or `export let` — use `$props()` for props.
 - Keep visualizations responsive: `viewBox` + `class="w-full"` (avoid fixed pixel sizing on the rendered element).

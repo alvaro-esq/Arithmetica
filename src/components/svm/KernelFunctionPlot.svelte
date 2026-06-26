@@ -1,6 +1,6 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
-  import { ACCENT } from '../../lib/svm/colors';
+  import { ACCENT, AXIS, BORDER, MUTED } from '../../lib/svm/colors';
 
   // The sigmoid kernel uses tanh(α·z + c), the same squashing function found in
   // neural-network activations. Drag α and c to see how it bends.
@@ -25,12 +25,12 @@
 
 <div class="space-y-4">
   <svg viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet" class="w-full aspect-[14/7.5]">
-    <line x1={pad} y1={yScale(0)} x2={width - pad} y2={yScale(0)} stroke="#D8D6CE" stroke-width="1.5" />
-    <line x1={xScale(0)} y1={pad} x2={xScale(0)} y2={height - pad} stroke="#D8D6CE" stroke-width="1.5" />
-    <line x1={pad} y1={yScale(1)} x2={width - pad} y2={yScale(1)} stroke="#E2E0D8" stroke-width="1" stroke-dasharray="3 4" />
-    <line x1={pad} y1={yScale(-1)} x2={width - pad} y2={yScale(-1)} stroke="#E2E0D8" stroke-width="1" stroke-dasharray="3 4" />
+    <line x1={pad} y1={yScale(0)} x2={width - pad} y2={yScale(0)} stroke={AXIS} stroke-width="1.5" />
+    <line x1={xScale(0)} y1={pad} x2={xScale(0)} y2={height - pad} stroke={AXIS} stroke-width="1.5" />
+    <line x1={pad} y1={yScale(1)} x2={width - pad} y2={yScale(1)} stroke={BORDER} stroke-width="1" stroke-dasharray="3 4" />
+    <line x1={pad} y1={yScale(-1)} x2={width - pad} y2={yScale(-1)} stroke={BORDER} stroke-width="1" stroke-dasharray="3 4" />
     <polyline points={path} fill="none" stroke={ACCENT} stroke-width="3" />
-    <text x={width - pad} y={yScale(0) - 6} text-anchor="end" font-size="12" fill="#777">z = xᵀx′</text>
+    <text x={width - pad} y={yScale(0) - 6} text-anchor="end" font-size="12" fill={MUTED}>z = xᵀx′</text>
   </svg>
 
   <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">

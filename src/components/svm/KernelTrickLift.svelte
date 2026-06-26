@@ -2,7 +2,7 @@
   import { scaleLinear } from 'd3-scale';
   import { interval1d } from '../../lib/svm/datasets';
   import { smoothstep } from '../../lib/svm/geometry';
-  import { POS, NEG, ACCENT as SEP, PAPER } from '../../lib/svm/colors';
+  import { POS, NEG, ACCENT as SEP, PAPER, AXIS, MUTED } from '../../lib/svm/colors';
 
   // The kernel trick, made visible. In 1D the data cannot be split by a single
   // point; lifting with φ(x) = (x, x²) places it on a parabola where a straight
@@ -48,10 +48,14 @@
       playing = false;
     }
   }
+  function pause() {
+    if (!playing) return;
+    playing = false;
+    cancelAnimationFrame(frame);
+  }
   function toggle() {
     if (playing) {
-      playing = false;
-      cancelAnimationFrame(frame);
+      pause();
       return;
     }
     if (s >= 1) s = 0;
@@ -65,11 +69,11 @@
 <div class="space-y-4">
   <svg viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet" class="w-full aspect-[3/2]">
     <!-- axes -->
-    <line x1={pad} y1={yScale(0)} x2={width - pad} y2={yScale(0)} stroke="#D8D6CE" stroke-width="2" />
-    <line x1={xScale(0)} y1={pad} x2={xScale(0)} y2={height - pad} stroke="#D8D6CE" stroke-width="1.5" />
+    <line x1={pad} y1={yScale(0)} x2={width - pad} y2={yScale(0)} stroke={AXIS} stroke-width="2" />
+    <line x1={xScale(0)} y1={pad} x2={xScale(0)} y2={height - pad} stroke={AXIS} stroke-width="1.5" />
 
     <!-- parabola manifold -->
-    <polyline points={parabolaPath} fill="none" stroke="#B9B6AC" stroke-width="1.5" stroke-dasharray="4 4" opacity={lift} />
+    <polyline points={parabolaPath} fill="none" stroke={MUTED} stroke-width="1.5" stroke-dasharray="4 4" opacity={lift} />
 
     <!-- separating line (appears after lifting) -->
     <line x1={pad} y1={lineY} x2={width - pad} y2={lineY} stroke={SEP} stroke-width="3" opacity={lineOpacity} />
@@ -82,8 +86,8 @@
       <circle cx={xScale(p.x)} cy={yScale(p.yv)} r="7" fill={p.label === 1 ? POS : NEG} stroke={PAPER} stroke-width="1.5" />
     {/each}
 
-    <text x={pad} y={height - 14} font-size="13" fill="#555">x</text>
-    <text x={xScale(0) + 8} y={pad + 4} font-size="13" fill="#555">x²</text>
+    <text x={pad} y={height - 14} font-size="13" fill={MUTED}>x</text>
+    <text x={xScale(0) + 8} y={pad + 4} font-size="13" fill={MUTED}>x²</text>
   </svg>
 
   <div class="flex items-center gap-4">
@@ -94,7 +98,7 @@
     >
       {playing ? 'Pausar' : s >= 1 ? 'Reiniciar' : 'Elevar'}
     </button>
-    <input type="range" bind:value={s} min="0" max="1" step="0.001" class="w-full accent-interactive" aria-label="Elevación" />
+    <input type="range" bind:value={s} oninput={pause} min="0" max="1" step="0.001" class="w-full accent-interactive" aria-label="Elevación" />
   </div>
 
   <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-ink">

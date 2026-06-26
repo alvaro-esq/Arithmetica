@@ -10,10 +10,12 @@ export function probs(counts: number[]): number[] {
   return counts.map((c) => c / total);
 }
 
-/** Gini impurity 1 − Σ pᵢ². Range [0, 1 − 1/k]; 0 means pure. */
+/** Gini impurity 1 − Σ pᵢ². Range [0, 1 − 1/k]; 0 means pure (and 0 for an empty
+ *  node, where pᵢ are all zero). */
 export function gini(counts: number[]): number {
   const p = probs(counts);
-  return 1 - p.reduce((s, pi) => s + pi * pi, 0);
+  const sumSq = p.reduce((s, pi) => s + pi * pi, 0);
+  return sumSq === 0 ? 0 : 1 - sumSq; // empty node → 0, not 1
 }
 
 /** Shannon entropy −Σ pᵢ log₂ pᵢ (bits). Range [0, log₂ k]; 0 means pure. */

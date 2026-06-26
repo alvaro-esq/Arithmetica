@@ -1,7 +1,7 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
   import { gini, entropy } from '../../lib/dt/impurity';
-  import { POS, NEG, ACCENT, AXIS, PAPER } from '../../lib/svm/colors';
+  import { POS, NEG, ACCENT, AXIS, PAPER, MUTED } from '../../lib/svm/colors';
 
   // Drag the class mix and watch the impurity curve respond. The parabola (Gini)
   // or its taller sibling (entropy) peaks at p = 0.5, where the node is most mixed.
@@ -77,8 +77,8 @@
         stroke-dasharray="4 4"
       />
       <circle cx={xScale(pEff)} cy={yScale(value)} r="6" fill={ACCENT} />
-      <text x={width - pad} y={yScale(0) + 22} text-anchor="end" font-size="12" fill="#777">p (clase 1)</text>
-      <text x={pad + 6} y={pad + 4} font-size="12" fill="#777">
+      <text x={width - pad} y={yScale(0) + 22} text-anchor="end" font-size="12" fill={MUTED}>p (clase 1)</text>
+      <text x={pad + 6} y={pad + 4} font-size="12" fill={MUTED}>
         {measure === 'gini' ? 'Gini' : 'Entropía'}
       </text>
     </svg>

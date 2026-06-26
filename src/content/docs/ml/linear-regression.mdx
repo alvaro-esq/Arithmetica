@@ -4,6 +4,13 @@ description: Interactive exploration of simple linear regression models
 ---
 
 import InteractiveRegression from '../../../components/InteractiveRegression.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+
+<LessonProgress
+  client:load
+  title="Your progress in Linear Regression"
+  sections={[{ id: 'lr-model', label: 'Fit the line' }]}
+/>
 
 Linear regression models the relationship between a dependent variable $y$ and an independent variable $x$. The simple linear model is given by:
 

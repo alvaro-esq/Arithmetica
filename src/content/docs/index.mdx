@@ -1,12 +1,74 @@
 ---
-title: Introduction
-description: Welcome to Arithmetica
+title: Arithmetica
+description: Un libro de texto vivo para Statistical Learning, Machine Learning y Deep Learning.
+template: splash
+hero:
+  tagline: Toca las matemáticas. Cada lección es una simulación interactiva, no una figura estática.
+  actions:
+    - text: Empezar con Regresión Lineal
+      link: /ml/linear-regression/
+      icon: right-arrow
+      variant: primary
+    - text: Ver todos los temas
+      link: /ml/
+      variant: minimal
 ---
 
-Welcome to **Arithmetica**, an interactive learning platform for statistical learning concepts.
+import LessonCard from '../../components/ui/LessonCard.svelte';
+import { Card, CardGrid } from '@astrojs/starlight/components';
 
-This platform provides hands-on exploration of machine learning fundamentals through interactive visualizations.
+## Aprende explorando
 
-## Getting Started
+Arithmetica es un **libro de texto vivo**: combina rigor académico y tipografía
+cuidada con visualizaciones de alto rendimiento que responden en tiempo real.
+Arrastra, ajusta y observa cómo cambian las matemáticas.
 
-Navigate through the sidebar to explore different topics in machine learning, starting with linear regression.
+<div class="not-content space-y-3">
+
+<LessonCard
+  client:load
+  href="/ml/linear-regression/"
+  title="Regresión Lineal"
+  description="El punto de partida: ajusta una recta a los datos y entiende mínimos cuadrados moviendo pendiente e intercepto."
+  sectionIds={['lr-model']}
+  featured={true}
+/>
+
+<LessonCard
+  client:load
+  href="/ml/decision-trees/"
+  title="Árboles de Decisión y Random Forests"
+  description="Del índice de Gini a los bosques y el boosting, paso a paso: haz crecer un árbol hasta clasificar todo."
+  sectionIds={['dt-gini', 'dt-duality', 'dt-growing', 'dt-forest', 'dt-boosting']}
+/>
+
+<LessonCard
+  client:load
+  href="/ml/svm/"
+  title="Support Vector Machines y Kernels"
+  description="Hiperplanos de margen máximo, soft margin y el truco del kernel — arrastra los puntos y encuentra el separador óptimo."
+  sectionIds={['svm-margin', 'svm-soft', 'svm-kernel']}
+/>
+
+</div>
+
+## Cómo funciona
+
+<CardGrid>
+  <Card title="Cero cajas negras" icon="open-book">
+    Las visualizaciones son simulaciones matemáticas reales, no animaciones
+    decorativas. Lo que ves es el modelo de verdad.
+  </Card>
+  <Card title="Rápido por diseño" icon="rocket">
+    Sitio estático por defecto; el JavaScript solo se carga en los componentes
+    interactivos. Respuesta inmediata a cada interacción.
+  </Card>
+  <Card title="Tu progreso, contigo" icon="approve-check">
+    A medida que avanzas, las lecciones se marcan como completadas y tu racha
+    crece. Todo se guarda en tu navegador.
+  </Card>
+  <Card title="Rigor con estética" icon="pencil">
+    Fórmulas en LaTeX, fondo off-white para leer sin fatiga y una jerarquía
+    visual que reduce la carga cognitiva.
+  </Card>
+</CardGrid>

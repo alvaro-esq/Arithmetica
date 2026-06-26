@@ -11,6 +11,20 @@ import BootstrapSampler from '../../../components/dt/BootstrapSampler.svelte';
 import RandomForestVote from '../../../components/dt/RandomForestVote.svelte';
 import FeatureImportance from '../../../components/dt/FeatureImportance.svelte';
 import AdaBoostStepper from '../../../components/dt/AdaBoostStepper.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+
+<LessonProgress
+  client:load
+  title="Tu progreso en Árboles de Decisión"
+  sections={[
+    { id: 'dt-gini', label: 'Gini' },
+    { id: 'dt-duality', label: 'Partición' },
+    { id: 'dt-growing', label: 'Crecer' },
+    { id: 'dt-forest', label: 'Bosques' },
+    { id: 'dt-boosting', label: 'Boosting' },
+  ]}
+/>
 
 Un **árbol de decisión** es un modelo de aprendizaje supervisado con forma de diagrama de flujo: cada **nodo interno** plantea una prueba sobre una característica, cada **rama** refleja un resultado de esa prueba, y cada **hoja** devuelve la predicción final. Su gran virtud es la interpretabilidad: el camino de la raíz a una hoja se lee como una secuencia de reglas `si… entonces…`.
 
@@ -48,6 +62,8 @@ $$ \min_{\text{corte}} \; \sum_{v} \frac{|S_v|}{|S|}\,\text{Gini}(S_v) $$
 
 donde cada $S_v$ es un subconjunto resultante de la división y $\frac{|S_v|}{|S|}$ su peso. La **ganancia** de un corte es la diferencia entre la impureza del padre y esta impureza ponderada de los hijos.
 
+<SectionComplete client:visible id="dt-gini" label="✓ Gini" />
+
 ## Un árbol es una partición
 
 La idea clave: **un árbol de decisión con cortes alineados a los ejes es exactamente una partición del espacio en rectángulos**. Cada hoja es una región, y cada región predice una clase.
@@ -71,6 +87,8 @@ clf = DecisionTreeClassifier(criterion='gini', max_depth=4)
 clf.fit(X_train, y_train)
 print("Precisión:", accuracy_score(y_test, clf.predict(X_test)))
 ```
+
+<SectionComplete client:visible id="dt-duality" label="✓ Partición" />
 
 ## Crecer el árbol
 
@@ -128,6 +146,8 @@ y_pred = rf.predict(X_test)
 <Aside type="tip" title="Parámetros clave">
 `n_estimators` (número de árboles: más es mejor hasta saturar), `max_features` (cuántas características considerar por división; `'sqrt'` es un buen valor por defecto), y `max_depth` / `min_samples_leaf` para controlar cada árbol.
 </Aside>
+
+<SectionComplete client:visible id="dt-forest" label="✓ Bosques" />
 
 ## Importancia de variables
 
@@ -210,6 +230,8 @@ clf.fit(X_train, y_train)
 <Aside type="note" title="¿Cuál elegir?">
 Para empezar, un **Random Forest** es robusto y casi no requiere ajuste. Si necesitas exprimir el máximo rendimiento, **XGBoost** o **LightGBM** suelen ganar, a cambio de afinar más parámetros. **CatBoost** brilla cuando hay muchas variables categóricas.
 </Aside>
+
+<SectionComplete client:visible id="dt-boosting" label="✓ Boosting" />
 
 ## Resumen
 

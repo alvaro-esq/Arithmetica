@@ -4,6 +4,7 @@
   import { decisionFunction, type KernelName, type KernelParams } from '../../lib/svm/kernels';
   import { smo, type KernelModel } from '../../lib/svm/solvers';
   import { POS, NEG, ACCENT, PAPER } from '../../lib/svm/colors';
+  import { gridCells } from '../../lib/viz/grid';
 
   // Pick a dataset and a kernel, then watch the decision regions reshape. By
   // default every point acts as its own support vector (a Parzen-style estimate)
@@ -61,26 +62,20 @@
     return { raw, maxAbs };
   });
 
+  // gridCells iterates gy-major like `grid.raw`, so cell[i] aligns with raw[i].
+  const dom = { xMin: -extent, yMin: -extent, xMax: extent, yMax: extent };
+
   // One rect per cell, tinted by sign(f), opacity by |f|.
   let cells = $derived.by(() => {
     const { raw, maxAbs } = grid;
-    const out: { x: number; y: number; w: number; h: number; fill: string; op: number }[] = [];
-    for (let gy = 0; gy < GRID; gy++) {
-      for (let gx = 0; gx < GRID; gx++) {
-        const f = raw[gy * GRID + gx];
-        const px = -extent + gx * cw;
-        const py = -extent + gy * cw;
-        out.push({
-          x: xScale(px),
-          y: yScale(py + cw),
-          w: xScale(px + cw) - xScale(px) + 0.5,
-          h: yScale(py) - yScale(py + cw) + 0.5,
-          fill: f >= 0 ? POS : ACCENT,
-          op: 0.07 + 0.28 * Math.min(1, Math.abs(f) / maxAbs),
-        });
-      }
-    }
-    return out;
+    return gridCells(dom, GRID, xScale, yScale, 0.5).map((c, i) => ({
+      x: c.x,
+      y: c.y,
+      w: c.w,
+      h: c.h,
+      fill: raw[i] >= 0 ? POS : NEG,
+      op: 0.07 + 0.28 * Math.min(1, Math.abs(raw[i]) / maxAbs),
+    }));
   });
 
   // Decision boundary: stroke the edge between adjacent cells whose sign differs.
@@ -119,14 +114,14 @@
   <div class="flex flex-wrap gap-3 text-sm text-ink">
     <label class="flex items-center gap-2">
       Datos:
-      <select bind:value={dataset} class="rounded border border-[#CFCDC4] bg-paper px-2 py-1">
+      <select bind:value={dataset} class="rounded border border-line bg-paper px-2 py-1">
         <option value="circles">Círculos concéntricos</option>
         <option value="moons">Dos lunas</option>
       </select>
     </label>
     <label class="flex items-center gap-2">
       Kernel:
-      <select bind:value={kernelName} class="rounded border border-[#CFCDC4] bg-paper px-2 py-1">
+      <select bind:value={kernelName} class="rounded border border-line bg-paper px-2 py-1">
         <option value="linear">Lineal</option>
         <option value="poly">Polinomial</option>
         <option value="rbf">RBF</option>

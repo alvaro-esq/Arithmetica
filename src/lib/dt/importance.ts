@@ -94,3 +94,38 @@ export function vectorImportance(
   if (sum === 0) return totals; // no information → all zeros (honest)
   return totals.map((v) => v / sum);
 }
+
+/**
+ * Incremental importance accumulator for a slider that grows the tree count. The
+ * unnormalized per-feature totals are purely additive in the number of trees and
+ * the per-tree seeds are deterministic, so growing N→N+k only grows the k new
+ * trees instead of rebuilding the whole forest each tick. Call `to(n)` to get the
+ * normalized importance for exactly `n` trees; shrinking `n` resets and replays
+ * (rare on a drag-to-increase slider).
+ */
+export function makeImportanceAccumulator(samples: VSample[], opts: Opts, seed: number) {
+  const nFeatures = samples.length ? samples[0].features.length : 0;
+  let totals = new Array(nFeatures).fill(0);
+  let grown = 0;
+  let root: Rng = mulberry32(seed);
+
+  function growOne() {
+    const treeRng = mulberry32(Math.floor(root() * 0x100000000));
+    const n = samples.length;
+    const bag: VSample[] = [];
+    for (let i = 0; i < n; i++) bag.push(samples[Math.floor(treeRng() * n)]);
+    growAndScore(bag, opts, bag.length, totals, 0);
+    grown++;
+  }
+
+  return function to(nTrees: number): number[] {
+    if (nTrees < grown) {
+      totals = new Array(nFeatures).fill(0);
+      grown = 0;
+      root = mulberry32(seed);
+    }
+    while (grown < nTrees) growOne();
+    const sum = totals.reduce((a, b) => a + b, 0);
+    return sum === 0 ? totals.slice() : totals.map((v) => v / sum);
+  };
+}

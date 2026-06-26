@@ -3,6 +3,7 @@
   import { POS, NEG, ACCENT, PAPER } from '../../lib/svm/colors';
   import { buildForest, forestProba } from '../../lib/dt/ensemble';
   import { classify } from '../../lib/dt/cart';
+  import { gridCells } from '../../lib/viz/grid';
   import type { BuildOpts, LPoint, TreeNode } from '../../lib/dt/types';
   import { moons, xor } from '../../lib/dt/datasets';
 
@@ -18,8 +19,10 @@
 
   const data = $derived<LPoint[]>(datasetName === 'moons' ? moons(110, 3) : xor(120, 5));
   const opts = $derived<BuildOpts>({ maxDepth, minSamples: 2, minGain: 0, nClasses: 2 });
-  // maxFeatures < 2 decorrelates the trees (true random-feature subsampling).
-  const forest = $derived(buildForest(data, nTrees, opts, 42, 1));
+  // maxFeatures=1 decorrelates the trees (random-feature subsampling) — but a lone
+  // tree restricted to one feature is degenerate, so let a single tree use both.
+  const maxFeatures = $derived(nTrees === 1 ? 2 : 1);
+  const forest = $derived(buildForest(data, nTrees, opts, 42, maxFeatures));
 
   const W = 420;
   const pad = 16;
@@ -31,26 +34,18 @@
   // Aggregated soft vote → smooth shading (opacity tracks vote confidence).
   const cells = $derived.by(() => {
     if (mode !== 'vote') return [];
-    const out: { x: number; y: number; w: number; h: number; fill: string; op: number }[] = [];
-    for (let gy = 0; gy < GRID; gy++) {
-      for (let gx = 0; gx < GRID; gx++) {
-        const px = dom.xMin + (gx + 0.5) * cw;
-        const py = dom.yMin + (gy + 0.5) * cw;
-        const pr = forestProba(forest, { x: px, y: py });
-        const x0 = dom.xMin + gx * cw;
-        const y0 = dom.yMin + gy * cw;
-        const conf = Math.abs(pr[1] - 0.5) * 2; // 0 at the boundary, 1 deep inside
-        out.push({
-          x: xScale(x0),
-          y: yScale(y0 + cw),
-          w: xScale(x0 + cw) - xScale(x0) + 0.6,
-          h: yScale(y0) - yScale(y0 + cw) + 0.6,
-          fill: pr[1] >= 0.5 ? POS : NEG,
-          op: 0.06 + 0.26 * conf,
-        });
-      }
-    }
-    return out;
+    return gridCells(dom, GRID, xScale, yScale).map((c) => {
+      const pr = forestProba(forest, { x: c.cx, y: c.cy });
+      const conf = Math.abs(pr[1] - 0.5) * 2; // 0 at the boundary, 1 deep inside
+      return {
+        x: c.x,
+        y: c.y,
+        w: c.w,
+        h: c.h,
+        fill: pr[1] >= 0.5 ? POS : NEG,
+        op: 0.06 + 0.26 * conf,
+      };
+    });
   });
 
   // Individual trees' boundaries (capped for perf), each at low opacity.
@@ -140,7 +135,7 @@
     </div>
     <select
       bind:value={datasetName}
-      class="rounded border border-[#CFCDC4] bg-paper px-2 py-1.5 text-sm"
+      class="rounded border border-line bg-paper px-2 py-1.5 text-sm"
     >
       <option value="moons">Dos lunas</option>
       <option value="xor">XOR</option>
@@ -151,7 +146,7 @@
       {maxDepth}
     </label>
   </div>
-  <p class="text-xs text-[#666]">
+  <p class="text-xs text-muted">
     {#if mode === 'trees'}
       Cada línea es la frontera de un árbol individual (hasta 25 mostradas): ruidosas y muy
       distintas entre sí.

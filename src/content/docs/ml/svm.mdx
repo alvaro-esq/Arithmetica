@@ -8,6 +8,18 @@ import SoftMarginSlack from '../../../components/svm/SoftMarginSlack.svelte';
 import KernelTrickLift from '../../../components/svm/KernelTrickLift.svelte';
 import KernelPlayground from '../../../components/svm/KernelPlayground.svelte';
 import KernelFunctionPlot from '../../../components/svm/KernelFunctionPlot.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+
+<LessonProgress
+  client:load
+  title="Tu progreso en SVM y Kernels"
+  sections={[
+    { id: 'svm-margin', label: 'Margen máximo' },
+    { id: 'svm-soft', label: 'Soft margin' },
+    { id: 'svm-kernel', label: 'Kernels' },
+  ]}
+/>
 
 Las **Máquinas de Vectores de Soporte** (SVM) son modelos de aprendizaje supervisado usados sobre todo en clasificación. Su objetivo es encontrar un **hiperplano** que separe los datos en dos categorías maximizando el margen entre el hiperplano y los puntos más cercanos de cada clase.
 
@@ -24,6 +36,8 @@ Esta técnica es efectiva incluso cuando las clases no son perfectamente separab
 En la siguiente visualización, gira la recta con el ángulo $\theta$ y deslízala con el sesgo $b$. Observa cómo se resaltan los vectores de soporte (los puntos más cercanos a cada lado) y cómo cambia el ancho del margen. Pulsa **Margen máximo** para saltar a la solución óptima.
 
 <MaxMarginHyperplane client:visible />
+
+<SectionComplete client:visible id="svm-margin" label="✓ Margen máximo" />
 
 ## El problema de optimización
 
@@ -69,6 +83,8 @@ El parámetro $C$ controla el equilibrio entre un **margen amplio** ($\frac{1}{2
 Mueve el deslizador de $C$ y observa cómo se recalcula la recta óptima. Los segmentos azules muestran la holgura $\xi_i$ de cada punto que cae dentro del margen o del lado equivocado, y las cifras de abajo desglosan los dos términos del objetivo.
 
 <SoftMarginSlack client:visible />
+
+<SectionComplete client:visible id="svm-soft" label="✓ Soft margin" />
 
 ## El truco del kernel
 
@@ -154,6 +170,8 @@ predictions = clf.predict(X_test)
 - **`'auto'`** fija $\gamma = \dfrac{1}{n_{\text{features}}}$. Más simple, pero puede no adaptarse bien a la variabilidad de los datos.
 
 **Recomendación:** prefiere `'scale'` para datos con alta variabilidad; usa `'auto'` con datos bien escalados o cuando busques un enfoque más sencillo.
+
+<SectionComplete client:visible id="svm-kernel" label="✓ Kernels" />
 
 ## Resumen
 

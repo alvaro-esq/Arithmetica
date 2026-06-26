@@ -106,12 +106,12 @@
     {/each}
   </svg>
 
-  <p class="text-xs text-[#666]">Arrastra los puntos y la recta óptima se recalcula al instante.</p>
+  <p class="text-xs text-muted">Arrastra los puntos y la recta óptima se recalcula al instante.</p>
 
   <label class="block text-sm font-medium text-ink">
     Parámetro de regularización C: {C >= 10 ? C.toFixed(0) : C.toFixed(2)}
     <input type="range" bind:value={logC} min="-2" max="2" step="0.05" class="mt-1 w-full accent-interactive" />
-    <span class="mt-1 block text-xs font-normal text-[#666]">C bajo → margen ancho, más tolerancia · C alto → ajusta cada punto</span>
+    <span class="mt-1 block text-xs font-normal text-muted">C bajo → margen ancho, más tolerancia · C alto → ajusta cada punto</span>
   </label>
 
   <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-ink sm:grid-cols-4">

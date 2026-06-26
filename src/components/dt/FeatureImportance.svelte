@@ -4,7 +4,7 @@
   import { cubicOut } from 'svelte/easing';
   import { mulberry32 } from '../../lib/svm/prng';
   import { ACCENT, NEG, AXIS } from '../../lib/svm/colors';
-  import { vectorImportance, type VSample } from '../../lib/dt/importance';
+  import { makeImportanceAccumulator, type VSample } from '../../lib/dt/importance';
 
   // Mean decrease in impurity per feature, computed over a genuine 3-feature
   // dataset: a strong feature, a moderate one, and a pure-noise column that carries
@@ -28,9 +28,10 @@
   })();
 
   const names = ['fuerte', 'moderada', 'ruido'];
-  const importance = $derived(
-    vectorImportance(data, nTrees, { maxDepth: 6, minSamples: 4, nClasses: 2 }, 7),
-  );
+  // Additive accumulator: dragging the slider grows only the new trees, not the
+  // whole forest from scratch on every tick.
+  const accumulate = makeImportanceAccumulator(data, { maxDepth: 6, minSamples: 4, nClasses: 2 }, 7);
+  const importance = $derived(accumulate(nTrees));
 
   // Animated bar widths — one Tween per bar, read through $derived like the SVM
   // components (a const array of Tweens trips the SSR renderer).
@@ -77,7 +78,7 @@
     Número de árboles: {nTrees}
     <input type="range" bind:value={nTrees} min="1" max="60" step="1" class="mt-1 w-full accent-interactive" />
   </label>
-  <p class="text-xs text-[#666]">
+  <p class="text-xs text-muted">
     Cuantos más árboles, más estable es la estimación. La característica de ruido se mantiene
     cerca de cero porque casi nunca reduce la impureza al dividir.
   </p>

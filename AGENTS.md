@@ -15,12 +15,15 @@
 - Math: KaTeX (Starlight native)
 - Charting: d3-scale ONLY (SVG rendered by Svelte)
 
-### Design System
-- Background (Light Theme): paper #F4F3EF
-- Text (Light Theme): ink #222222
-- Interactive Accent: interactive #002FA7 (Klein Blue)
-- Klein Blue is ONLY for interactive elements (sliders, active states, draggable handles)
-- Never use Klein Blue for static borders or backgrounds
+### Design System — "Ink & Copper"
+- Color tokens live in ONE place: `src/lib/svm/colors.ts` (mirrored in `tailwind.config.mjs` + `src/styles/global.css`). Import them; never hardcode hex in markup.
+- Background: paper #F5F3EE (warm off-white) · raised surfaces: #FBFAF6 · never pure white
+- Text: ink #1F1D1B (warm near-black) · secondary: muted #7A756B
+- Interactive / primary accent: interactive #1A3A6B (ink blue) — controls, CTAs, decision geometry
+- Data classes: copper #B5532A (+1) · slate #3B4252 (−1)
+- State: success #2E7D52 (checkmarks, completion, celebrations) · warn #B7791F
+- Neutrals: line #E3DFD4 (borders) · axis #CFC9BA (gridlines)
+- UI/UX guidance: follow `docs/ui-ux-principles.md` and the `ui-ux` skill. Every interactive element needs hover/active/focus-visible states; all motion respects `prefers-reduced-motion`.
 
 ### General Guidelines
 - Follow AGPL-3.0 license requirements
