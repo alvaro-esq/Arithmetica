@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { markComplete } from '../../lib/progress';
+  import { markComplete, isPresenting } from '../../lib/progress';
   import Celebrate from './Celebrate.svelte';
 
   // Drop one after each lesson section. When the reader scrolls it past the fold
@@ -17,7 +17,9 @@
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting) {
+          // Ignore visibility caused by the deck relocating this node mid-present;
+          // only genuine scroll-into-view (presenting === false) counts.
+          if (e.isIntersecting && !isPresenting()) {
             if (markComplete(id)) celebrate = true; // first time only
             io.disconnect();
           }

@@ -5,6 +5,9 @@ description: Interactive exploration of simple linear regression models
 
 import InteractiveRegression from '../../../components/InteractiveRegression.svelte';
 import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:idle title="Linear Regression" />
 
 <LessonProgress
   client:load

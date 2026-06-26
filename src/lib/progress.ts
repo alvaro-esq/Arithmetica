@@ -66,6 +66,19 @@ export function isComplete(id: string): boolean {
   return !!read().done[id];
 }
 
+// While the presentation deck is open it relocates each section (including its
+// SectionComplete sentinel) into a full-screen stage, which would otherwise fire
+// every section's IntersectionObserver and falsely complete the whole lesson just
+// by paging through. Scroll-into-view completion is suppressed while presenting;
+// the deck owns nothing about progress, it just pauses the observers.
+let presenting = false;
+export function setPresenting(on: boolean): void {
+  presenting = on;
+}
+export function isPresenting(): boolean {
+  return presenting;
+}
+
 const EVENT = 'arithmetica:progress-change';
 
 /** Subscribe to progress changes (mark-complete / streak). Returns an unsubscribe
