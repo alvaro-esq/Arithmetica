@@ -3,7 +3,7 @@
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
   import { SUCCESS, ACCENT } from '../../lib/svm/colors';
-  import { completedCount, touchStreak, getStreak, isComplete, onProgressChange } from '../../lib/progress';
+  import { touchStreak, snapshot, onProgressChange } from '../../lib/progress';
 
   // Sticky-ish lesson header: a completion bar over the lesson's sections plus a
   // daily streak. Goal-Gradient (visible progress) + Zeigarnik (the unfinished
@@ -23,9 +23,11 @@
   const pct = new Tween(0, { duration: 500, easing: cubicOut });
 
   function refresh() {
-    done = completedCount(ids);
-    doneSet = Object.fromEntries(sections.map((s) => [s.id, isComplete(s.id)]));
-    streak = getStreak();
+    // One localStorage read+parse per refresh (snapshot), not N+2.
+    const snap = snapshot();
+    done = snap.doneCount(ids);
+    doneSet = Object.fromEntries(sections.map((s) => [s.id, snap.isDone(s.id)]));
+    streak = snap.streak;
     // Endowed progress: never show a stone-cold 0% bar — seed a sliver.
     pct.target = ids.length ? Math.max(done / ids.length, done === 0 ? 0.04 : 0) : 0;
   }

@@ -1,0 +1,131 @@
+---
+title: Introducción a Deep Learning
+description: Del perceptrón a la sigmoide, las redes multicapa, el descenso de gradiente y la retropropagación, explorado con visualizaciones interactivas.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import PerceptronBoundary from '../../../components/dl/PerceptronBoundary.svelte';
+import SigmoidNeuron from '../../../components/dl/SigmoidNeuron.svelte';
+import GradientDescent from '../../../components/dl/GradientDescent.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:idle title="Introducción a Deep Learning" />
+
+<LessonProgress
+  client:load
+  title="Tu progreso en Deep Learning"
+  sections={[
+    { id: 'dl-intro', label: 'ML vs DL' },
+    { id: 'dl-perceptron', label: 'Perceptrón' },
+    { id: 'dl-sigmoid', label: 'Sigmoide' },
+    { id: 'dl-architecture', label: 'Arquitectura' },
+    { id: 'dl-gradient', label: 'Gradiente' },
+    { id: 'dl-backprop', label: 'Backpropagation' },
+  ]}
+/>
+
+El **deep learning** son redes neuronales con muchas capas que **aprenden las características** directamente de los datos, en lugar de que un humano las diseñe a mano. Esa es la diferencia esencial con el machine learning clásico: donde antes hacíamos *ingeniería de características*, ahora la red las **extrae sola**.
+
+## ¿Qué es Deep Learning?
+
+En el aprendizaje clásico, gran parte del trabajo es **diseñar a mano** las variables que el modelo recibe (feature engineering). Una red profunda, en cambio, aprende una **jerarquía de representaciones**: las primeras capas detectan patrones simples y las profundas los combinan en conceptos cada vez más abstractos.
+
+![Ingeniería de características frente a aprendizaje de características](/img/dl/dl-vs-ml.png)
+
+La idea no es nueva —del perceptrón de Rosenblatt (1958) a las redes multicapa con retropropagación (1980s)— pero solo despegó al combinarse con **grandes datos y GPUs**. A cambio de su poder, exige muchos datos, cómputo y cuidado contra el sobreajuste.
+
+<SectionComplete client:visible id="dl-intro" label="✓ ML vs DL" />
+
+## El Perceptrón
+
+El **perceptrón** es la neurona más simple: suma sus entradas ponderadas y dispara si supera un umbral $\theta$. Escrito con un **sesgo** $b = -\theta$, la regla queda:
+
+$$ \text{salida} = \begin{cases} 1 & \text{si } w\cdot x + b > 0 \\ 0 & \text{en otro caso} \end{cases} $$
+
+![Esquema de un perceptrón](/img/dl/perceptron.png)
+
+Con los pesos adecuados, un perceptrón calcula funciones lógicas. Por ejemplo, la compuerta **NAND** se obtiene con $w_1 = -2,\; w_2 = -2,\; b = 3$:
+
+![Tabla de verdad de NAND con un perceptrón](/img/dl/nand-truth.png)
+
+Pero un perceptrón solo traza **una recta**: $w\cdot x + b = 0$. Elige una compuerta y mueve los pesos. **AND**, **OR** y **NAND** se separan con una recta y llegan al 100 %. Con **XOR** chocas contra un muro: ninguna recta logra separar sus clases, y la precisión se estanca en el 75 %.
+
+<PerceptronBoundary client:visible />
+
+Esa imposibilidad —junto a que la función **escalón no es diferenciable**— es lo que motiva los dos grandes saltos que siguen: una activación suave y varias capas.
+
+<SectionComplete client:visible id="dl-perceptron" label="✓ Perceptrón" />
+
+## Neuronas Sigmoides
+
+El escalón es un interruptor brusco: su pendiente es cero en casi todas partes, así que no nos dice **en qué dirección** ajustar los pesos. La **sigmoide** lo suaviza:
+
+$$ \sigma(z) = \frac{1}{1 + e^{-z}}, \qquad \text{salida} = \sigma(w\cdot x + b), \qquad \sigma'(z) = \sigma(z)\,\big(1 - \sigma(z)\big) $$
+
+Ahora un cambio pequeño en $w$ o $b$ produce un cambio pequeño y **medible** en la salida. Mueve $w$ y $b$ y observa la curva; sube $w$ y verás cómo la sigmoide se aproxima de nuevo al escalón:
+
+<SigmoidNeuron client:visible />
+
+<Aside type="tip">
+La clave no es la fórmula, sino que la curva es **diferenciable**. Esa pendiente (la línea verde) es exactamente la señal que el descenso de gradiente necesita para aprender.
+</Aside>
+
+<SectionComplete client:visible id="dl-sigmoid" label="✓ Sigmoide" />
+
+## Arquitectura de redes
+
+Apilando neuronas en **capas** —entrada, ocultas y salida— construimos un **perceptrón multicapa (MLP)**. Con una sola capa oculta ya se resuelve XOR: dos neuronas ocultas detectan *"al menos una entrada activa"* (OR) y *"ambas activas"* (AND), y la salida combina ambas como **OR pero no AND**:
+
+$$ h_1 = \sigma\big(s\,(x_1 + x_2 - 0.5)\big), \qquad h_2 = \sigma\big(s\,(x_1 + x_2 - 1.5)\big), \qquad y = \sigma\big(s\,(h_1 - h_2 - 0.5)\big) $$
+
+Con eso, las cuatro esquinas se clasifican bien: $(0,0)\to 0$, $(0,1)\to 1$, $(1,0)\to 1$, $(1,1)\to 0$ — justo lo que una sola recta no podía.
+
+![Red 2→2→1 que resuelve XOR](/img/dl/xor-network.png)
+
+La misma idea escala. Para reconocer dígitos manuscritos (MNIST), la entrada son los $28\times 28 = 784$ píxeles y la salida 10 neuronas (una por dígito):
+
+![Dígitos manuscritos del conjunto MNIST](/img/dl/mnist.png)
+
+![Red 784 → 15 → 10 para clasificar dígitos](/img/dl/mnist-network.png)
+
+<SectionComplete client:visible id="dl-architecture" label="✓ Arquitectura" />
+
+## Función de costo y descenso de gradiente
+
+Entrenar es **minimizar** una función de costo que mide cuánto se aleja la salida $a$ de la deseada $y(x)$. Con el costo cuadrático:
+
+$$ C(w, b) = \frac{1}{2n} \sum_x \lVert y(x) - a \rVert^2 $$
+
+El **gradiente** $\nabla C$ apunta hacia donde el costo *crece* más rápido; para bajar, damos pasos en sentido contrario, escalados por la **tasa de aprendizaje** $\eta$:
+
+$$ w \leftarrow w - \eta\,\frac{\partial C}{\partial w} $$
+
+Arrastra el punto inicial y ajusta $\eta$. Demasiado **alto** y el descenso oscila o **diverge**; demasiado **bajo** y se arrastra sin llegar; uno **bueno** baja directo al mínimo:
+
+<GradientDescent client:visible />
+
+<SectionComplete client:visible id="dl-gradient" label="✓ Gradiente" />
+
+## Backpropagation
+
+¿Cómo obtenemos $\partial C/\partial w$ para *cada* peso de una red profunda? Con **retropropagación**: aplicando la regla de la cadena hacia atrás, capa por capa. Definiendo el error de una neurona como $\delta^l_j = \partial C / \partial z^l_j$, todo se resume en **cuatro ecuaciones**:
+
+$$ \delta^L = \nabla_a C \odot \sigma'(z^L) \tag{BP1} $$
+
+$$ \delta^l = \big((w^{l+1})^{\top}\,\delta^{l+1}\big) \odot \sigma'(z^l) \tag{BP2} $$
+
+$$ \frac{\partial C}{\partial b^l_j} = \delta^l_j \tag{BP3} $$
+
+$$ \frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k\,\delta^l_j \tag{BP4} $$
+
+(BP1) mide el error en la salida; (BP2) lo **propaga hacia atrás** por los pesos; (BP3) y (BP4) convierten ese error en los gradientes que actualizan sesgos y pesos.
+
+![Las cuatro ecuaciones de la retropropagación](/img/dl/backprop.png)
+
+<Aside type="tip">
+No hace falta memorizar la derivación. Quédate con el flujo: **hacia adelante** para calcular la salida → **error en la salida** → **propaga $\delta$ hacia atrás** → **actualiza** $w$ y $b$ con un paso de gradiente.
+</Aside>
+
+<SectionComplete client:visible id="dl-backprop" label="✓ Backpropagation" />

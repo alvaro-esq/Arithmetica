@@ -51,7 +51,12 @@ export function touchStreak(): number {
   const now = new Date();
   const t = localDay(now);
   if (s.lastVisit === t) return s.streak; // already counted today
-  const yesterday = localDay(new Date(now.getTime() - 864e5));
+  // Calendar arithmetic, not now − 24h: subtracting a fixed 864e5 ms lands on the
+  // wrong calendar day across a DST spring-forward (a 23-hour local day), which
+  // would falsely reset the streak. setDate(-1) rolls the calendar day back safely.
+  const y = new Date(now);
+  y.setDate(y.getDate() - 1);
+  const yesterday = localDay(y);
   s.streak = s.lastVisit === yesterday ? s.streak + 1 : 1;
   s.lastVisit = t;
   write(s);
@@ -64,6 +69,23 @@ export function getStreak(): number {
 
 export function isComplete(id: string): boolean {
   return !!read().done[id];
+}
+
+/** One-shot snapshot of the whole progress store, so a UI refresh can read the
+ *  localStorage blob ONCE and compute done-count / per-id flags / streak from it,
+ *  instead of N+2 separate getItem+JSON.parse calls. */
+export interface ProgressSnapshot {
+  streak: number;
+  doneCount: (ids: string[]) => number;
+  isDone: (id: string) => boolean;
+}
+export function snapshot(): ProgressSnapshot {
+  const s = read();
+  return {
+    streak: s.streak,
+    doneCount: (ids) => ids.filter((id) => s.done[id]).length,
+    isDone: (id) => !!s.done[id],
+  };
 }
 
 // While the presentation deck is open it relocates each section (including its

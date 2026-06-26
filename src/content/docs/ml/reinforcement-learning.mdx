@@ -1,0 +1,137 @@
+---
+title: Introducción a Reinforcement Learning
+description: Agente y entorno, MDP y Gridworld, funciones de valor, la ecuación de Bellman, transiciones determinísticas vs estocásticas y value/policy networks, con visualizaciones interactivas.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import GridworldValueIteration from '../../../components/rl/GridworldValueIteration.svelte';
+import BellmanBackup from '../../../components/rl/BellmanBackup.svelte';
+import StochasticTransitions from '../../../components/rl/StochasticTransitions.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:idle title="Reinforcement Learning" />
+
+<LessonProgress
+  client:load
+  title="Tu progreso en Reinforcement Learning"
+  sections={[
+    { id: 'rl-intro', label: 'Introducción' },
+    { id: 'rl-mdp', label: 'MDP' },
+    { id: 'rl-value', label: 'Funciones de valor' },
+    { id: 'rl-bellman', label: 'Bellman' },
+    { id: 'rl-stochastic', label: 'Estocástico' },
+    { id: 'rl-networks', label: 'Value/Policy Nets' },
+  ]}
+/>
+
+A diferencia del aprendizaje supervisado (datos etiquetados) o no supervisado (estructura sin etiquetas), el **aprendizaje por refuerzo** se centra en la **toma de decisiones secuenciales**: un **agente** interactúa con un **entorno**, toma acciones y aprende de la **recompensa** que recibe, buscando maximizar la recompensa acumulada a lo largo del tiempo.
+
+## ¿Qué es el aprendizaje por refuerzo?
+
+El agente observa el **estado** del entorno, elige una **acción**, y el entorno responde con un nuevo estado y una **recompensa**. Repitiendo este ciclo, el agente aprende una **política**: qué hacer en cada situación.
+
+![El bucle de refuerzo: el agente actúa, el entorno devuelve estado y recompensa](/img/rl/rl-loop.png)
+
+Es el paradigma detrás de **AlphaGo**, la robótica autónoma, los sistemas de recomendación y la optimización de energía o de cadenas de suministro.
+
+![Un problema de RL del mundo real: estados, acciones y recompensa](/img/rl/go-example.png)
+
+<SectionComplete client:visible id="rl-intro" label="✓ Introducción" />
+
+## Procesos de Decisión de Markov (MDP)
+
+Un **MDP** es el marco matemático del refuerzo. Se define como una tupla:
+
+$$ (S,\; A,\; P,\; R,\; \gamma) $$
+
+donde $S$ son los **estados**, $A$ las **acciones**, $P(s'\mid s,a)$ las **probabilidades de transición**, $R$ las **recompensas** y $\gamma$ el **factor de descuento**. La propiedad de Markov dice que el futuro depende solo del estado actual, no de toda la historia.
+
+Un **Gridworld** es el MDP de juguete por excelencia: una rejilla donde el agente se mueve hacia una meta evitando peligros. La **política** $\pi$ puede ser **determinística** ($\pi(s) = a$) o **estocástica** ($\pi(a\mid s) = P(A_t=a\mid S_t=s)$).
+
+![Gridworld: estados, una meta y un peligro](/img/rl/gridworld.png)
+
+<SectionComplete client:visible id="rl-mdp" label="✓ MDP" />
+
+## Funciones de valor y Gridworld
+
+La **función de valor de estado** mide cuán bueno es estar en un estado $s$: el retorno futuro esperado siguiendo la política $\pi$.
+
+$$ V(s) = \mathbb{E}\!\left[\sum_{t=0}^{\infty} \gamma^t R_{t+1} \;\middle|\; S_0 = s\right] $$
+
+La **función de valor de acción** $Q(s,a)$ es análoga, pero fija la primera acción:
+
+$$ Q(s,a) = \mathbb{E}\!\left[\sum_{t=0}^{\infty} \gamma^t R_{t+1} \;\middle|\; S_0 = s,\; A_0 = a\right] $$
+
+**Value iteration** calcula $V(s)$ propagando la recompensa hacia atrás desde la meta, barrido a barrido, hasta converger. Ejecútalo paso a paso y observa cómo el valor "fluye" por la rejilla y las flechas de la política apuntan hacia la meta:
+
+<GridworldValueIteration client:visible />
+
+![Value iteration: V(s) numérico convergido en la rejilla](/img/rl/value-grid.png)
+
+![La política óptima como flechas en cada estado](/img/rl/policy-arrows.png)
+
+<Aside type="note">
+La **política greedy** se lee directamente del valor: en cada estado, ir hacia el vecino de mayor $V$. Por eso las flechas siempre apuntan "cuesta arriba" hacia la meta.
+</Aside>
+
+<SectionComplete client:visible id="rl-value" label="✓ Funciones de valor" />
+
+## La ecuación de Bellman
+
+Toda la magia está en una ecuación recursiva: el valor de un estado es el de su **mejor acción**, y el de una acción combina la **recompensa inmediata** con el **valor descontado** de los estados a los que lleva.
+
+$$ V(s) = \max_a \sum_{s'} P(s'\mid s,a)\,\big[\,R(s,a) + \gamma\,V(s')\,\big] $$
+
+El factor de descuento $\gamma$ controla el **horizonte**: con $\gamma$ cercano a 1 el agente valora el largo plazo; con $\gamma$ pequeño es **miope** y solo le importa la recompensa inmediata $R_{t+1}$. Haz clic en una celda para ver la ecuación descompuesta acción por acción:
+
+<BellmanBackup client:visible />
+
+![La ecuación de Bellman, descompuesta en recompensa y futuro descontado](/img/rl/bellman.png)
+
+<Aside type="tip">
+$\gamma \approx 1$: el agente planifica a largo plazo y "ve" metas lejanas. $\gamma$ pequeño: el agente descuenta tanto el futuro que el coste de cada paso pesa más que una recompensa distante — y puede no llegar nunca.
+</Aside>
+
+<SectionComplete client:visible id="rl-bellman" label="✓ Bellman" />
+
+## Transiciones determinísticas vs estocásticas
+
+En un mundo **determinístico**, una acción siempre produce el resultado esperado. En uno **estocástico**, no: $P(s'\mid s,a)$ reparte la probabilidad entre varios resultados — el agente puede "resbalar" hacia un lado.
+
+Sube la probabilidad de resbalar y vuelve a resolver: los valores cerca del peligro bajan y la **política óptima se vuelve cautelosa**, alejándose del −1 aunque el camino seguro sea más largo:
+
+<StochasticTransitions client:visible />
+
+![Transiciones determinísticas vs estocásticas](/img/rl/deterministic-stochastic.png)
+
+<Aside type="caution">
+La incertidumbre cambia la decisión óptima. Esto conecta con el dilema **exploración vs explotación**: el agente debe probar acciones nuevas (explorar) para descubrir recompensas, pero también aprovechar lo que ya sabe (explotar) para no perder recompensa.
+</Aside>
+
+<SectionComplete client:visible id="rl-stochastic" label="✓ Estocástico" />
+
+## Value y Policy Networks (Deep RL)
+
+En Gridworld podemos guardar $V(s)$ en una tabla. Pero en problemas reales —con millones de estados— se aproxima con **redes neuronales**:
+
+- Una **value network** estima $V(s)$: cuán bueno es un estado.
+- Una **policy network** estima $\pi(a\mid s)$: qué acción tomar. Se entrena con **gradiente de política**, ajustando los pesos para favorecer las acciones que más recompensa producen.
+
+Juntas (esquema **actor–crítico**) se complementan: la policy network sugiere la acción, la value network evalúa si el estado es favorable. Es el motor de **AlphaGo** y del Deep RL moderno.
+
+![Value network y policy network: representaciones aprendidas del valor y la política](/img/rl/value-policy-nets.png)
+
+| Red | Aprende | Salida | Entrenamiento |
+|---|---|---|---|
+| **Value network** | $V(s)$ | valor escalar del estado | minimizar el error con las recompensas observadas |
+| **Policy network** | $\pi(a\mid s)$ | distribución sobre acciones | gradiente de política |
+
+Estos métodos son potentes pero **costosos**: requieren muchísimas interacciones (eficiencia de muestras), GPUs potentes, y son propensos a inestabilidad durante el entrenamiento — de ahí técnicas como *experience replay*, Double DQN o Dueling DQN.
+
+<Aside type="note">
+El salto conceptual: de **tablas exactas** en Gridworld a **redes que generalizan** en espacios enormes. La ecuación de Bellman sigue siendo el corazón — solo que ahora $V$ y $\pi$ son redes neuronales en lugar de tablas.
+</Aside>
+
+<SectionComplete client:visible id="rl-networks" label="✓ Value/Policy Nets" />

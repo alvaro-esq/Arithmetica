@@ -1,0 +1,127 @@
+---
+title: Arquitecturas Avanzadas de Redes Neuronales
+description: Convoluciones y CNN sobre datos estructurados, autoencoders con cuello de botella, y arquitecturas tabulares (Wide & Deep, Deep & Cross, xDeepFM), con visualizaciones interactivas.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Conv1DExplorer from '../../../components/adv/Conv1DExplorer.svelte';
+import AutoencoderBottleneck from '../../../components/adv/AutoencoderBottleneck.svelte';
+import WideAndDeep from '../../../components/adv/WideAndDeep.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:idle title="Arquitecturas Avanzadas" />
+
+<LessonProgress
+  client:load
+  title="Tu progreso en Arquitecturas Avanzadas"
+  sections={[
+    { id: 'adv-conv', label: 'Convoluciones' },
+    { id: 'adv-combos', label: 'CNN + MLP/LSTM' },
+    { id: 'adv-autoencoder', label: 'Autoencoders' },
+    { id: 'adv-widedeep', label: 'Wide & Deep' },
+    { id: 'adv-dcn', label: 'Deep & Cross' },
+    { id: 'adv-xdeepfm', label: 'xDeepFM' },
+  ]}
+/>
+
+Más allá del perceptrón multicapa, ciertas **arquitecturas especializadas** explotan la estructura de los datos. Las **CNN** detectan patrones locales; los **autoencoders** aprenden representaciones compactas; y una familia de modelos **para datos tabulares** combina memorización y generalización. Las recorremos una a una.
+
+## Convoluciones y CNN
+
+La **convolución** combina los datos con un pequeño conjunto de números —un **filtro** o **kernel**— que se desliza sobre la entrada y, en cada posición, calcula una suma ponderada del vecindario local. Distintos filtros resaltan distintos patrones: bordes, suavizado, realce.
+
+Aunque las CNN se asocian a imágenes, son igual de útiles en **series de tiempo y datos tabulares**, donde detectan correlaciones locales y tendencias. Elige un filtro y desliza su posición para ver la suma ponderada exacta —y cómo el filtro de **borde** se dispara justo en las transiciones de la señal:
+
+<Conv1DExplorer client:visible />
+
+![Arquitectura general de una CNN: convolución, submuestreo y clasificación](/img/adv/cnn.png)
+
+![Convolución 1-D aplicada a datos estructurados / series](/img/adv/cnn-1d.png)
+
+<Aside type="note">
+Un filtro se aplica en **todas** las posiciones con los mismos pesos. Por eso una CNN reconoce un patrón local —un borde, un pico, una tendencia— sin importar **dónde** aparezca: es la propiedad de **invarianza a la traslación**.
+</Aside>
+
+<SectionComplete client:visible id="adv-conv" label="✓ Convoluciones" />
+
+## CNN como extractor: MLP+CNN y CNN+LSTM/GRU
+
+Una CNN suele usarse como **extractor de características**: filtra la entrada y captura patrones locales, y otra red toma el relevo.
+
+- **MLP + CNN:** la CNN extrae características; un MLP las clasifica o predice. Útil en reconocimiento de voz, detección de fraude y predicción de series.
+- **CNN + LSTM/GRU:** la CNN captura patrones **locales (espaciales)** y la red recurrente modela las **dependencias temporales**. Ideal para reconocimiento de actividad, análisis financiero y series multivariadas.
+
+![CNN seguida de capas LSTM: extracción local + dependencias temporales](/img/adv/cnn-lstm.png)
+
+<SectionComplete client:visible id="adv-combos" label="✓ CNN + MLP/LSTM" />
+
+## Autoencoders
+
+Un **autoencoder** no predice una etiqueta: aprende a **comprimir y reconstruir** sus propios datos. Un **encoder** los lleva a una representación de menor dimensión (el **cuello de botella**) y un **decoder** intenta reconstruir la entrada original. El entrenamiento minimiza el error de reconstrucción:
+
+$$ \min \; \big\lVert x - \hat{x} \big\rVert^2 $$
+
+Al forzar el paso por un cuello de botella estrecho, la red descarta lo redundante y conserva lo esencial. Estrecha el cuello de botella y observa cómo crece el error; activa los outliers y mira cómo **no se reconstruyen**:
+
+<AutoencoderBottleneck client:visible />
+
+![Autoencoder: encoder → cuello de botella → decoder](/img/adv/autoencoder.png)
+
+<Aside type="tip">
+Usos de los autoencoders: **reducción de dimensionalidad**, *denoising* (eliminar ruido), generación de datos y, sobre todo, **detección de anomalías** — lo que el modelo **no logra reconstruir bien** (error alto) es, por definición, atípico.
+</Aside>
+
+<SectionComplete client:visible id="adv-autoencoder" label="✓ Autoencoders" />
+
+## Wide & Deep
+
+En datos tabulares, dos enfoques se complementan: los modelos **lineales (wide)** *memorizan* combinaciones concretas de atributos pero generalizan mal; las redes **profundas (deep)** *generalizan* pero no memorizan reglas simples. **Wide & Deep** combina ambas, sumando sus salidas:
+
+$$ \hat{y} = \sigma\!\left(w_{wide}^\top x_{wide} + w_{deep}^\top h_{deep}\right) $$
+
+- La parte **wide** usa **cruces explícitos** de variables (memoriza el patrón tipo tablero).
+- La parte **deep** usa *embeddings* + MLP (frontera suave que generaliza).
+
+Alterna entre wide, deep y la combinación, y activa o desactiva los cruces de la parte wide:
+
+<WideAndDeep client:visible />
+
+![Arquitectura Wide & Deep: la parte wide y la parte deep convergen en la salida](/img/adv/wide-deep.png)
+
+<Aside type="tip">
+El equilibrio entre **memorizar** (reglas conocidas) y **generalizar** (casos nuevos) es lo que hace a Wide & Deep tan usado en *click-through rate* y sistemas de recomendación.
+</Aside>
+
+<SectionComplete client:visible id="adv-widedeep" label="✓ Wide & Deep" />
+
+## Deep & Cross Network (DCN)
+
+Crear cruces de variables a mano es costoso y poco escalable. La **Deep & Cross Network** los **aprende automáticamente**: sus *cross layers* generan interacciones de orden creciente entre atributos,
+
+$$ x_{l+1} = x_0\,(x_l^\top w_l) + b_l + x_l $$
+
+mientras, en paralelo, un MLP captura las relaciones no lineales generales. Así combina interacciones **explícitas** (las cross layers) e **implícitas** (el MLP), sin *feature engineering* manual.
+
+![Comparación: red profunda, Wide & Deep y Deep & Cross Network](/img/adv/dcn.png)
+
+<SectionComplete client:visible id="adv-dcn" label="✓ Deep & Cross" />
+
+## xDeepFM
+
+**xDeepFM** lleva la idea más lejos combinando **tres** bloques: una **parte lineal** (atributos crudos), una **CIN** (*Compressed Interaction Network*, que aprende interacciones explícitas de alto orden entre *embeddings*) y una **parte deep** (un MLP para las interacciones implícitas). La predicción final combina los tres, lo que la hace muy potente en datos categóricos dispersos.
+
+![Arquitectura xDeepFM: parte lineal + CIN + DNN](/img/adv/xdeepfm.png)
+
+| Arquitectura | Idea central | Fortaleza | Debilidad |
+|---|---|---|---|
+| **Wide & Deep** | Memorizar (wide) + generalizar (deep) | Equilibrio; CTR y recomendación | Requiere cruces manuales |
+| **Deep & Cross** | Aprende cruces de alto orden | Escalable, sin feature engineering | Ajuste delicado de capas/embeddings |
+| **xDeepFM** | CIN (explícitas) + MLP (implícitas) | Potente en categóricos dispersos | Arquitectura pesada, más costosa |
+
+<Aside type="note">
+La evolución es clara: de **cruces de features manuales** (Wide & Deep) a **interacciones aprendidas automáticamente** (DCN, xDeepFM). Cada paso reduce el trabajo manual y captura relaciones más ricas en los datos tabulares.
+</Aside>
+
+<SectionComplete client:visible id="adv-xdeepfm" label="✓ xDeepFM" />

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
   import { POS, NEG, ACCENT, PAPER } from '../../lib/svm/colors';
-  import { buildForest, forestProba } from '../../lib/dt/ensemble';
+  import { buildForest, forestProba, makeForestAccumulator } from '../../lib/dt/ensemble';
   import { classify } from '../../lib/dt/cart';
   import { gridCells } from '../../lib/viz/grid';
   import type { BuildOpts, LPoint, TreeNode } from '../../lib/dt/types';
@@ -19,10 +19,14 @@
 
   const data = $derived<LPoint[]>(datasetName === 'moons' ? moons(110, 3) : xor(120, 5));
   const opts = $derived<BuildOpts>({ maxDepth, minSamples: 2, minGain: 0, nClasses: 2 });
-  // maxFeatures=1 decorrelates the trees (random-feature subsampling) — but a lone
-  // tree restricted to one feature is degenerate, so let a single tree use both.
-  const maxFeatures = $derived(nTrees === 1 ? 2 : 1);
-  const forest = $derived(buildForest(data, nTrees, opts, 42, maxFeatures));
+  // The decorrelated forest uses maxFeatures=1 (random-feature subsampling). An
+  // additive accumulator, rebuilt only when the dataset/depth changes, so dragging
+  // the tree-count slider grows just the new trees instead of the whole forest.
+  const grow = $derived(makeForestAccumulator(data, opts, 42, 1));
+  // A lone tree restricted to one feature is degenerate, so when showing a single
+  // tree we build one that uses both features (cheap: one tree).
+  const singleTreeForest = $derived(buildForest(data, 1, opts, 42, 2));
+  const forest = $derived(nTrees === 1 ? singleTreeForest : grow(nTrees));
 
   const W = 420;
   const pad = 16;

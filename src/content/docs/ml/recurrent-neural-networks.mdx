@@ -1,0 +1,163 @@
+---
+title: Redes Neuronales Recurrentes
+description: Estado oculto y memoria, tipos de RNN (seq2seq, seq2vec, vec2seq, encoder-decoder), BPTT y el gradiente que se desvanece, LSTM/GRU y el módulo de atención, con visualizaciones interactivas.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import HiddenStateRecurrence from '../../../components/rnn/HiddenStateRecurrence.svelte';
+import VanishingGradient from '../../../components/rnn/VanishingGradient.svelte';
+import AttentionHeatmap from '../../../components/rnn/AttentionHeatmap.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:idle title="Redes Neuronales Recurrentes" />
+
+<LessonProgress
+  client:load
+  title="Tu progreso en Redes Neuronales Recurrentes"
+  sections={[
+    { id: 'rnn-motivation', label: 'Recurrencia' },
+    { id: 'rnn-hidden', label: 'Estado oculto' },
+    { id: 'rnn-types', label: 'Tipos de RNN' },
+    { id: 'rnn-bptt', label: 'BPTT' },
+    { id: 'rnn-gates', label: 'LSTM y GRU' },
+    { id: 'rnn-attention', label: 'Atención' },
+  ]}
+/>
+
+Una red neuronal tradicional procesa **todas** las características de una vez y no tiene noción del tiempo. Pero muchos datos —texto, audio, series temporales— son **secuencias**, donde cada elemento depende de los anteriores. Las **redes recurrentes (RNN)** resuelven esto reutilizando la misma unidad paso a paso y arrastrando una **memoria** entre instantes.
+
+## ¿Por qué recurrencia?
+
+A diferencia de una red feedforward, una RNN procesa **un *timestep* a la vez**. En cada paso recibe el vector de características de ese instante y el **estado oculto** del instante anterior, calcula un nuevo estado y, opcionalmente, una salida. La misma unidad —con los mismos pesos— se aplica repetidamente: es como "desenrollarla" en el tiempo.
+
+![Una RNN desenrollada en el tiempo: la misma unidad se repite por cada timestep](/img/rnn/rnn-unrolled.png)
+
+Esa reutilización es la clave: la red puede manejar secuencias de cualquier longitud y, sobre todo, **recordar** lo que vio antes para interpretar lo que viene.
+
+<SectionComplete client:visible id="rnn-motivation" label="✓ Recurrencia" />
+
+## Estado oculto: la memoria
+
+El corazón de una RNN es la recurrencia del **estado oculto** $h_t$, que encapsula la memoria de la red hasta el instante $t$:
+
+$$ h_t = \tanh\!\left(W_{hh}\,h_{t-1} + W_{xh}\,x_t + b_h\right) $$
+
+Cada estado mezcla el anterior $h_{t-1}$ (ponderado por $W_{hh}$, el peso **recurrente**) con la entrada actual $x_t$ (ponderada por $W_{xh}$). La salida se obtiene de ese estado:
+
+$$ y_t = \sigma\!\left(W_{hy}\,h_t + b_y\right) $$
+
+Se usa $\tanh$ —que escala la entrada a $[-1, 1]$, centrada en 0— porque mantiene los gradientes en un rango controlado y ayuda a **mitigar el desvanecimiento** que veremos más abajo.
+
+El peso recurrente $W_{hh}$ es lo que decide si la red **recuerda u olvida**. Mueve los controles: con $W_{hh}$ alto, el pico de entrada deja un eco que persiste muchos pasos; con $W_{hh}$ bajo, el estado lo borra casi de inmediato. Usa el deslizador de **paso** para ver la fórmula sustituida con números reales:
+
+<HiddenStateRecurrence client:visible />
+
+![La celda RNN: cómo se combinan h_(t-1), x_t y la activación para producir h_t e y_t](/img/rnn/rnn-cell.png)
+
+![Vista por capa de la unidad recurrente repetida en el tiempo](/img/rnn/rnn-layer.png)
+
+<Aside type="note">
+El estado oculto $h_t$ es la **memoria** de la red: acumula información a medida que avanza la secuencia, y es lo que diferencia a una RNN de una red tradicional.
+</Aside>
+
+<SectionComplete client:visible id="rnn-hidden" label="✓ Estado oculto" />
+
+## Tipos de RNN
+
+Según cómo se conecten entradas y salidas, hay cuatro arquitecturas típicas:
+
+- **Sequence to Sequence** (secuencia → secuencia): una salida por cada paso de entrada. *Forecasting*, traducción, generación de subtítulos.
+
+![Sequence to Sequence: una salida en cada timestep](/img/rnn/seq2seq.png)
+
+- **Sequence to Vector** (secuencia → vector): solo importa la salida final, que condensa toda la secuencia. Análisis de sentimientos, clasificación de textos, detección de fraude.
+
+![Sequence to Vector: solo se conserva la salida final](/img/rnn/seq2vec.png)
+
+- **Vector to Sequence** (vector → secuencia): a partir de un único vector se genera una secuencia. Descripción de imágenes, generación de texto o música.
+
+![Vector to Sequence: un vector inicial expandido en una secuencia](/img/rnn/vec2seq.png)
+
+- **Encoder-Decoder**: un *encoder* condensa la entrada en un vector de contexto y un *decoder* lo expande en la salida. Traducción automática, resúmenes y la base de muchos modelos de lenguaje.
+
+![Encoder-Decoder: el encoder condensa, el decoder genera](/img/rnn/encoder-decoder.png)
+
+<SectionComplete client:visible id="rnn-types" label="✓ Tipos de RNN" />
+
+## Entrenamiento: BPTT y el gradiente que se desvanece
+
+Las RNN se entrenan con **Backpropagation Through Time (BPTT)**: se desenrolla la red en el tiempo, se calcula una salida $y_t$ en cada paso y se acumula el costo total:
+
+$$ C = \sum_{t=1}^{T} L\!\left(y_t, \hat{y}_t\right) $$
+
+Como todas las instancias comparten los mismos pesos, los gradientes se **suman** a lo largo de todos los *timesteps*:
+
+$$ \frac{\partial C}{\partial W} = \sum_{t=1}^{T} \frac{\partial C}{\partial y_t}\,\frac{\partial y_t}{\partial W} $$
+
+![BPTT: el error se propaga hacia atrás a través del tiempo](/img/rnn/bptt.png)
+
+El problema aparece al propagar el error muchos pasos atrás. La sensibilidad de un estado lejano respecto de uno temprano es un **producto** de un factor por paso:
+
+$$ \frac{\partial h_T}{\partial h_k} = \prod_{t=k+1}^{T} W_{hh}\,\tanh'\!\left(z_t\right) $$
+
+Si cada factor es menor que 1, el producto **se desvanece** geométricamente: el gradiente que llega al inicio de la secuencia es minúsculo y la red no aprende dependencias largas (y si es mayor que 1, **explota**). Ajusta $W_{hh}$ y la longitud, y compara el modo saturante con el linealizado:
+
+<VanishingGradient client:visible />
+
+<Aside type="caution">
+El desvanecimiento del gradiente es la gran limitación de las RNN simples: "olvidan" el principio de las secuencias largas. Esto motivó arquitecturas con **puertas** —LSTM y GRU— diseñadas para preservar el flujo del gradiente.
+</Aside>
+
+<SectionComplete client:visible id="rnn-bptt" label="✓ BPTT" />
+
+## LSTM y GRU
+
+Las **LSTM** (Long Short-Term Memory) añaden un **estado de celda** $C_t$ —una memoria de largo plazo— y tres **puertas** que regulan el flujo de información, cada una con una sigmoide que produce valores entre 0 (cerrar) y 1 (dejar pasar):
+
+$$ f_t = \sigma(\cdot) \quad\text{(forget)}, \qquad i_t = \sigma(\cdot) \quad\text{(input)}, \qquad o_t = \sigma(\cdot) \quad\text{(output)} $$
+
+- **Forget gate** $f_t$: cuánto del estado de celda anterior $C_{t-1}$ se conserva.
+- **Input gate** $i_t$: cuánta información nueva se escribe en $C_t$.
+- **Output gate** $o_t$: qué parte del estado de celda se expone como salida $h_t$.
+
+![Celda LSTM: las puertas forget, input y output sobre el estado de celda](/img/rnn/lstm-cell.png)
+
+![Varias celdas LSTM encadenadas: el estado de celda fluye a lo largo del tiempo](/img/rnn/lstm-stack.png)
+
+La **GRU** (Gated Recurrent Unit) simplifica la idea: fusiona los estados (no hay $C_t$ separado) y usa solo dos puertas, **reinicio** $r_t$ y **actualización** $z_t$. Tiene menos parámetros y suele entrenar más rápido, con un rendimiento comparable.
+
+![Celda GRU: las puertas de reinicio y actualización](/img/rnn/gru-cell.png)
+
+| Arquitectura | Memoria larga | Parámetros | Cuándo usarla |
+|---|---|---|---|
+| **RNN simple** | Débil (se desvanece) | Pocos | Secuencias cortas |
+| **LSTM** | Fuerte | Muchos | Dependencias largas y complejas |
+| **GRU** | Buena | Intermedios | Buen equilibrio coste/rendimiento |
+
+<SectionComplete client:visible id="rnn-gates" label="✓ LSTM y GRU" />
+
+## Atención
+
+Incluso con puertas, comprimir toda una secuencia en un único vector crea un **cuello de botella**. El módulo de **atención** lo evita: en cada paso, la red busca dinámicamente qué partes de la secuencia son relevantes y les asigna **pesos de importancia**.
+
+A cada elemento se le asocian tres vectores mediante proyecciones lineales:
+
+$$ Q = X W_Q, \qquad K = X W_K, \qquad V = X W_V $$
+
+La **query** ($Q$) es lo que se busca; las **keys** ($K$) etiquetan cada elemento; los **values** ($V$) son la información a extraer. La relevancia se mide con el **producto punto** —que captura el alineamiento $Q\cdot K = \lVert Q\rVert\,\lVert K\rVert\cos\theta$— y se normaliza con *softmax*:
+
+$$ \alpha = \mathrm{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right), \qquad \mathrm{Attention}(Q,K,V) = \alpha V $$
+
+El factor $\sqrt{d_k}$ estabiliza las magnitudes; cada fila de $\alpha$ es una distribución (no negativa y suma 1). Selecciona una query y mira a qué tokens atiende; baja la temperatura para concentrar el foco:
+
+<AttentionHeatmap client:visible />
+
+Cuando $Q$, $K$ y $V$ vienen de la **misma** secuencia hablamos de *self-attention*; cuando $Q$ viene del *decoder* y $K, V$ del *encoder*, de *cross-attention*. Este mecanismo es la base de los **Transformers** y de los modelos de lenguaje modernos.
+
+<Aside type="tip">
+La atención rompe el cuello de botella del estado único: en lugar de recordar todo en un vector, la red **mira directamente** a la parte relevante de la entrada. Es el salto conceptual que llevó de las RNN a los Transformers.
+</Aside>
+
+<SectionComplete client:visible id="rnn-attention" label="✓ Atención" />

@@ -115,6 +115,8 @@ Sin criterios de parada, un árbol crece hasta aislar cada punto en su propia ho
 
 **Ventajas** de los árboles: son fáciles de entender y visualizar, requieren poca preparación de datos (no necesitan normalización, toleran variables numéricas y categóricas), y sirven tanto para clasificación como para regresión. **Desventajas:** propensos al sobreajuste, varianza alta, dificultad para capturar relaciones lineales y sesgo hacia características con más niveles de división.
 
+<SectionComplete client:visible id="dt-growing" label="✓ Crecer" />
+
 ## Bagging y Random Forest
 
 Si un solo árbol tiene varianza alta, **promediar muchos** la reduce. **Random Forest** es un ensamble de tipo *bagging* (*bootstrap aggregating*) que combina las predicciones de muchos árboles para obtener un modelo más estable y preciso. Dos ingredientes lo hacen funcionar:

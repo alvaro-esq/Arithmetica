@@ -65,6 +65,9 @@
     const [ll, lr] = partition(rl, leftFeature, leftThr);
     const [rrl, rrr] = partition(rr, rightFeature, rightThr);
     const rootCounts = tally(data, 2);
+    // tally each child subset once and reuse for both `impurity` and `counts`.
+    const leftCounts = tally(rl, 2);
+    const rightCounts = tally(rr, 2);
     return {
       kind: 'split',
       feature: rootFeature,
@@ -79,10 +82,10 @@
         feature: leftFeature,
         threshold: leftThr,
         depth: 1,
-        impurity: gini(tally(rl, 2)),
+        impurity: gini(leftCounts),
         gain: 0,
         n: rl.length,
-        counts: tally(rl, 2),
+        counts: leftCounts,
         left: leafOf(ll, 2),
         right: leafOf(lr, 2),
       },
@@ -91,10 +94,10 @@
         feature: rightFeature,
         threshold: rightThr,
         depth: 1,
-        impurity: gini(tally(rr, 2)),
+        impurity: gini(rightCounts),
         gain: 0,
         n: rr.length,
-        counts: tally(rr, 2),
+        counts: rightCounts,
         left: leafOf(rrl, 2),
         right: leafOf(rrr, 2),
       },

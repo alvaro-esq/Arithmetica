@@ -1,0 +1,179 @@
+---
+title: Detección de Anomalías
+description: De la clasificación con clases desbalanceadas a LOF, Isolation Forest y la evaluación sin etiquetas, explorado con visualizaciones interactivas.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ThresholdTuner from '../../../components/anomaly/ThresholdTuner.svelte';
+import LofExplorer from '../../../components/anomaly/LofExplorer.svelte';
+import IForestPath from '../../../components/anomaly/IForestPath.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:idle title="Detección de Anomalías" />
+
+<LessonProgress
+  client:load
+  title="Tu progreso en Detección de Anomalías"
+  sections={[
+    { id: 'anom-intro', label: 'Qué es' },
+    { id: 'anom-supervised', label: 'Métricas' },
+    { id: 'anom-resampling', label: 'Rebalanceo' },
+    { id: 'anom-lof', label: 'LOF' },
+    { id: 'anom-iforest', label: 'Isolation Forest' },
+    { id: 'anom-evaluation', label: 'Silueta' },
+  ]}
+/>
+
+La **detección de anomalías** busca observaciones que se desvían sustancialmente del resto —lo *raro*, lo que parece haber sido generado por un **mecanismo distinto** al que produce los datos normales. La dificultad de fondo es que esa definición es difusa: muchas veces no sabemos qué buscamos, solo que es *diferente*.
+
+## ¿Qué es una anomalía?
+
+Formalmente, dado un conjunto $D = \{x_1, \ldots, x_n\}$ con $x_i \in \mathbb{R}^d$, modelamos el comportamiento normal con una densidad $p(x \mid \theta)$ y marcamos como anómalo todo punto cuya probabilidad cae por debajo de un umbral:
+
+$$ p(x^\* \mid \theta) < \tau \;\Rightarrow\; x^\* \text{ es anomalía} $$
+
+El **umbral $\tau$ es el problema central**: demasiado bajo y dejamos pasar anomalías reales; demasiado alto y ahogamos en falsas alarmas. Dos escenarios cambian por completo cómo lo abordamos:
+
+- **Supervisado:** tenemos etiquetas (sabemos qué fue anómalo). Es una clasificación binaria muy desbalanceada.
+- **No supervisado:** no hay etiquetas. Buscamos puntos en **regiones de baja densidad** o con estructura distinta a la masa de los datos.
+
+<SectionComplete client:visible id="anom-intro" label="✓ Qué es una anomalía" />
+
+## Clasificación con clases desbalanceadas
+
+En el caso supervisado, las anomalías son la **clase minoritaria**, y por mucho: el número de positivos es ínfimo frente a los negativos.
+
+$$ |\{i : y_i = 1\}| \ll |\{i : y_i = 0\}| $$
+
+![Clases desbalanceadas](/img/anomaly/imbalance.png)
+
+Con este desbalance, la **exactitud engaña**: un modelo que dice "todo es normal" acierta el 99 % y no detecta nada. Las métricas correctas se leen de la matriz de confusión (TP, FP, TN, FN):
+
+$$ \text{Precisión} = \frac{TP}{TP+FP}, \qquad \text{Recall} = \frac{TP}{TP+FN}, \qquad F_1 = \frac{2\,P\,R}{P+R} $$
+
+La **precisión** pregunta "de lo que marqué como anomalía, ¿cuánto lo era?"; el **recall**, "de las anomalías reales, ¿cuántas encontré?". El $F_1$ es su media armónica. Como casi todos los clasificadores producen una **puntuación** continua, podemos mover el umbral de decisión $\tau$ para optimizar la métrica que nos importe:
+
+$$ \tau^\* = \arg\max_{\tau} \; \text{Métrica}\big(y_{\text{true}}, \, \hat{y}(\tau)\big) $$
+
+Arrastra el umbral $\tau$ y observa cómo se reparte el conteo y cómo suben o bajan las tres métricas. Pulsa **τ\*** para saltar al umbral que maximiza el $F_1$:
+
+<ThresholdTuner client:visible />
+
+```python
+from sklearn.metrics import precision_recall_curve
+import numpy as np
+
+precisions, recalls, thresholds = precision_recall_curve(y_true, y_scores)
+f1_scores = 2 * (precisions * recalls) / (precisions + recalls)
+best_threshold = thresholds[np.argmax(f1_scores)]
+
+y_pred_optimal = (y_scores >= best_threshold).astype(int)
+```
+
+<SectionComplete client:visible id="anom-supervised" label="✓ Métricas y umbral" />
+
+## Rebalanceo: undersampling, Tomek y SMOTE
+
+Otra vía es **reequilibrar** el dataset antes de entrenar.
+
+- **Random Undersampling:** elimina ejemplos de la clase mayoritaria al azar. Equilibra, pero **pierde información**.
+- **Random Oversampling:** replica ejemplos de la minoritaria. Equilibra, pero **arriesga overfitting** al duplicar.
+
+![Submuestreo y sobremuestreo](/img/anomaly/resampling.png)
+
+**Tomek Links** limpia la frontera: un *Tomek Link* es un par de puntos de clases opuestas que son mutuamente los vecinos más cercanos. Eliminar el miembro mayoritario de cada par afila el límite entre clases.
+
+![Tomek Links](/img/anomaly/tomek.png)
+
+**SMOTE** (*Synthetic Minority Over-sampling*) no copia: **genera puntos sintéticos** interpolando entre un punto minoritario y uno de sus vecinos minoritarios. Cada punto nuevo cae sobre el segmento que los une:
+
+$$ x_{\text{new}} = x_i + \lambda\,(x_j - x_i), \qquad \lambda \in [0,1] $$
+
+Esto rellena el espacio de la minoría sin duplicados exactos, reduciendo el overfitting frente al oversampling aleatorio.
+
+![SMOTE: muestras sintéticas entre vecinos minoritarios](/img/anomaly/smote.png)
+
+```python
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import TomekLinks
+
+X_res, y_res = SMOTE(random_state=42).fit_resample(X, y)
+X_res, y_res = TomekLinks().fit_resample(X_res, y_res)
+```
+
+<SectionComplete client:visible id="anom-resampling" label="✓ Rebalanceo" />
+
+## Detección no supervisada: Local Outlier Factor
+
+Sin etiquetas, puntuamos cada observación por su **rareza**. El baseline más simple es la distancia media a los $k$ vecinos más cercanos:
+
+$$ s(x) = \frac{1}{k} \sum_{i=1}^{k} d(x, x_i) $$
+
+Funciona para anomalías **globales**, pero falla con densidades variables: un punto puede estar lejos de todo en una región dispersa y aun así ser normal *para esa región*. **LOF** resuelve esto comparando la densidad local de un punto con la de sus vecinos:
+
+$$ \text{LOF}_k(A) = \frac{1}{|N_k(A)|}\sum_{B \in N_k(A)} \frac{\text{lrd}_k(B)}{\text{lrd}_k(A)} $$
+
+donde $\text{lrd}$ es la densidad de alcance local (el inverso de la distancia de accesibilidad media). La lectura es directa: **LOF ≈ 1** significa densidad parecida a la de los vecinos (normal); **LOF > 1** significa que el punto está en una región más dispersa que su entorno (anomalía local).
+
+Arrastra **P** dentro y fuera del clúster, y cambia $k$. El círculo es su *k-distancia* y los radios señalan a sus vecinos; mira cómo el valor de LOF cruza el umbral de 1:
+
+<LofExplorer client:visible />
+
+<Aside type="tip">
+No hace falta memorizar la derivación completa (k-distancia → distancia de accesibilidad → lrd → LOF). Quédate con la intuición: **LOF mide densidad relativa**, no distancia absoluta.
+</Aside>
+
+```python
+from sklearn.neighbors import LocalOutlierFactor
+
+model = LocalOutlierFactor(n_neighbors=20, contamination=0.1)
+labels = model.fit_predict(X)   # -1 = anomalía, 1 = normal
+scores = model.negative_outlier_factor_
+```
+
+<SectionComplete client:visible id="anom-lof" label="✓ LOF" />
+
+## Isolation Forest
+
+**Isolation Forest** invierte la lógica: en lugar de modelar lo normal, intenta **aislar** cada punto con cortes aleatorios alineados a los ejes. La clave es que **las anomalías se aíslan en pocos cortes** —están apartadas— mientras que un punto en el corazón de un clúster necesita muchos. La **longitud del camino** (número de cortes hasta aislar) es la puntuación: caminos cortos ⇒ más anómalo.
+
+![Arquitectura de Isolation Forest](/img/anomaly/iforest_arch.png)
+
+Pulsa **Siguiente división** para ver cómo los cortes aleatorios encierran al punto objetivo. Alterna entre la **anomalía** y un **punto del clúster** y compara cuántas divisiones necesita cada uno:
+
+<IForestPath client:visible />
+
+El parámetro **`contamination`** indica la proporción esperada de anomalías; se ajusta con conocimiento del dominio o validación cruzada.
+
+```python
+from sklearn.ensemble import IsolationForest
+
+model = IsolationForest(contamination=0.1, random_state=42)
+model.fit(X)
+labels = model.predict(X)            # -1 = anomalía, 1 = normal
+scores = model.decision_function(X)  # menor = más anómalo
+```
+
+<SectionComplete client:visible id="anom-iforest" label="✓ Isolation Forest" />
+
+## Evaluar sin etiquetas: Coeficiente de Silueta
+
+Sin *ground truth* no podemos calcular precisión ni recall. Recurrimos a **métricas internas** que miden la calidad de la estructura. El **coeficiente de silueta** compara, para cada punto, su cohesión con su propio clúster ($a$) frente a su separación del clúster vecino más cercano ($b$):
+
+$$ s(i) = \frac{b(i) - a(i)}{\max\{a(i),\, b(i)\}} $$
+
+![Coeficiente de silueta](/img/anomaly/silhouette.png)
+
+Un valor cercano a **+1** indica un punto bien agrupado; cercano a **0**, en la frontera entre dos clústeres; **negativo**, probablemente mal asignado —un buen candidato a anomalía.
+
+En la práctica conviene **combinar métodos**: Isolation Forest para un primer barrido por aislamiento, LOF para anomalías locales por densidad, y la silueta para evaluar la calidad del agrupamiento resultante. Ningún método único captura todas las formas de "raro".
+
+```python
+from sklearn.metrics import silhouette_score
+
+print("Silhouette promedio:", silhouette_score(X, labels))
+```
+
+<SectionComplete client:visible id="anom-evaluation" label="✓ Silueta" />

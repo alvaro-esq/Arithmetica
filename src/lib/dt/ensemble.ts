@@ -67,6 +67,41 @@ export function buildForest(
   return { trees, oobMask };
 }
 
+/**
+ * Incremental forest accumulator for a tree-count slider. Per-tree seeds are
+ * deterministic (one child seed per tree off the root rng), and trees are
+ * independent, so growing N→N+k only builds the k new trees instead of rebuilding
+ * the whole forest each tick. `to(n)` returns a Forest with exactly `n` trees;
+ * shrinking `n` truncates (no rebuild). `maxFeatures` is fixed for the accumulator
+ * so a given tree index is identical at every slider position.
+ */
+export function makeForestAccumulator(
+  points: LPoint[],
+  opts: BuildOpts,
+  seed: number,
+  maxFeatures = 2,
+) {
+  const root = mulberry32(seed);
+  const n = points.length;
+  const allFeatures: Feature[] = [0, 1];
+  const trees: TreeNode[] = [];
+  const oobMask: boolean[][] = [];
+
+  function growOne() {
+    const treeRng = mulberry32(childSeed(root));
+    const idx = bootstrapIndices(n, treeRng);
+    const inBag = new Set(idx);
+    oobMask.push(points.map((_, i) => !inBag.has(i)));
+    const features: Feature[] = maxFeatures >= 2 ? allFeatures : [treeRng() < 0.5 ? 0 : 1];
+    trees.push(buildTree(resample(points, idx), { ...opts, features }));
+  }
+
+  return function to(nTrees: number): Forest {
+    while (trees.length < nTrees) growOne();
+    return { trees: trees.slice(0, nTrees), oobMask: oobMask.slice(0, nTrees) };
+  };
+}
+
 /** Majority-vote class over the forest (ties to the lower class index). */
 export function forestVote(forest: Forest, p: { x: number; y: number }): number {
   const votes: Record<number, number> = {};

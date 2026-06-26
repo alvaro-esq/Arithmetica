@@ -1,0 +1,136 @@
+---
+title: Regularización y Optimización en Deep Learning
+description: Inicialización, funciones de activación, L1/L2/Dropout, los optimizadores SGD/RMSprop/Adam, Batch Normalization y heurísticas de diseño, con visualizaciones interactivas.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ActivationExplorer from '../../../components/optim/ActivationExplorer.svelte';
+import RegularizationPath from '../../../components/optim/RegularizationPath.svelte';
+import OptimizerRace from '../../../components/optim/OptimizerRace.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:idle title="Regularización y Optimización" />
+
+<LessonProgress
+  client:load
+  title="Tu progreso en Regularización y Optimización"
+  sections={[
+    { id: 'optim-init', label: 'Inicialización' },
+    { id: 'optim-activations', label: 'Activaciones' },
+    { id: 'optim-regularization', label: 'Regularización' },
+    { id: 'optim-optimizers', label: 'Optimización' },
+    { id: 'optim-batchnorm', label: 'Batch Norm' },
+    { id: 'optim-design', label: 'Diseño' },
+  ]}
+/>
+
+Una vez que una red *puede* aprender (perceptrones, sigmoides, backprop), el reto es que aprenda **bien** y **generalice**. Eso es regularización y optimización: cómo arrancar los pesos, qué activación usar, cómo evitar el sobreajuste y cómo bajar el costo de forma estable y rápida.
+
+## Inicialización de pesos
+
+Si los pesos arrancan mal, las activaciones y los gradientes se **encogen o explotan** capa a capa. La solución es escalar la varianza inicial según el tamaño de la capa. Dos esquemas dominan:
+
+$$ W \sim U\!\left(-\sqrt{\tfrac{6}{n_{in}+n_{out}}},\ \sqrt{\tfrac{6}{n_{in}+n_{out}}}\right) \quad\text{(Xavier/Glorot)}, \qquad W \sim \mathcal{N}\!\left(0,\ \tfrac{2}{n_{in}}\right) \quad\text{(He)} $$
+
+La regla práctica empareja inicialización con activación: **sigmoid/tanh → Xavier**; **ReLU → He**. Xavier mantiene la varianza estable en activaciones simétricas; He compensa que ReLU anula la mitad de las entradas.
+
+<SectionComplete client:visible id="optim-init" label="✓ Inicialización" />
+
+## Funciones de activación
+
+La activación decide cómo fluye la señal —y, sobre todo, el **gradiente**— por la red. Las cuatro más comunes:
+
+$$ \sigma(z)=\frac1{1+e^{-z}}, \quad \tanh(z)=\frac{e^z-e^{-z}}{e^z+e^{-z}}, \quad \mathrm{ReLU}(z)=\max(0,z), \quad \mathrm{LReLU}(z)=\begin{cases}z & z\ge 0\\ \alpha z & z<0\end{cases} $$
+
+$$ \sigma'=\sigma(1-\sigma), \quad \tanh'=1-\tanh^2 z, \quad \mathrm{ReLU}'=\mathbb{1}[z>0], \quad \mathrm{LReLU}'=\begin{cases}1 & z\ge 0\\ \alpha & z<0\end{cases} $$
+
+Lo decisivo es la **derivada**. Donde se aplana a ≈0 (las colas de sigmoid y tanh), el gradiente se desvanece y el aprendizaje se estanca. Cambia de activación y mueve la sonda hacia los extremos para verlo:
+
+<ActivationExplorer client:visible />
+
+![Las cuatro funciones de activación y sus formas](/img/optim/activations.png)
+
+<Aside type="tip">
+ReLU es el valor por defecto en capas ocultas porque su gradiente no se desvanece para $z>0$. Si aparecen "neuronas muertas" (atascadas en $z<0$), Leaky ReLU las revive con una pendiente pequeña.
+</Aside>
+
+<SectionComplete client:visible id="optim-activations" label="✓ Activaciones" />
+
+## Regularización
+
+Para evitar el sobreajuste, penalizamos la complejidad del modelo añadiendo un término a la pérdida:
+
+$$ L_{\text{L1}} = L + \lambda\sum_j |w_j|, \qquad L_{\text{L2}} = L + \lambda\sum_j w_j^2, \qquad L_{\text{EN}} = L + \lambda\big(\alpha\textstyle\sum_j |w_j| + (1-\alpha)\textstyle\sum_j w_j^2\big) $$
+
+La diferencia clave es **geométrica**: la restricción L1 es un **diamante** con esquinas sobre los ejes, así que la solución óptima tiende a caer en una esquina —**un peso se vuelve exactamente 0** (dispersión). La L2 es un **círculo** sin esquinas: encoge todos los pesos pero rara vez los anula. Arrastra el centro y ajusta el presupuesto:
+
+<RegularizationPath client:visible />
+
+![Superficies de pérdida con restricción L1 vs L2](/img/optim/l1vsl2.png)
+
+**Dropout** es otra forma de regularizar: durante el entrenamiento desactiva cada neurona con probabilidad $p$, forzando representaciones redundantes. Equivale a entrenar un **ensemble implícito** de subredes.
+
+![Dropout: desactivación aleatoria de neuronas](/img/optim/dropout.png)
+
+<Aside type="tip">
+L1 = diamante (esquinas en los ejes → ceros → selección de características). L2 = círculo (encogimiento suave). Elastic Net combina ambos.
+</Aside>
+
+<SectionComplete client:visible id="optim-regularization" label="✓ Regularización" />
+
+## Optimización
+
+El descenso de gradiente estocástico (**SGD**) actualiza `w ← w − η g`, pero con una sola tasa $\eta$ sufre en valles estrechos: oscila a lo ancho mientras avanza poco a lo largo. Los métodos **adaptativos** escalan el paso por coordenada:
+
+$$ \text{SGD: } w \leftarrow w - \eta\,g_t $$
+
+$$ \text{RMSprop: } v_t = \beta v_{t-1} + (1-\beta)g_t^2, \qquad w \leftarrow w - \frac{\eta}{\sqrt{v_t}+\epsilon}\,g_t $$
+
+$$ \text{Adam: } m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t, \quad v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2, \quad \hat m_t = \frac{m_t}{1-\beta_1^t}, \ \hat v_t = \frac{v_t}{1-\beta_2^t}, \quad w \leftarrow w - \eta\,\frac{\hat m_t}{\sqrt{\hat v_t}+\epsilon} $$
+
+Corre los tres sobre el mismo valle: con la misma $\eta$, **SGD rebota** entre las paredes mientras RMSprop y Adam se deslizan recto al mínimo. Prueba también $\eta$ muy alta (diverge) y muy baja (no llega):
+
+<OptimizerRace client:visible />
+
+![Tasa de aprendizaje baja](/img/optim/low-lr.png)
+
+![Tasa de aprendizaje alta](/img/optim/high-lr.png)
+
+![Convergencia con RMSprop](/img/optim/rmsprop.png)
+
+<SectionComplete client:visible id="optim-optimizers" label="✓ Optimización" />
+
+## Batch Normalization
+
+**Batch Norm** estabiliza y acelera el entrenamiento normalizando las activaciones de cada mini-lote, y luego aprende un escalado y desplazamiento que devuelven flexibilidad a la red:
+
+$$ \hat{x} = \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}, \qquad y = \gamma\,\hat{x} + \beta $$
+
+Primero se centra y escala a media 0 / varianza 1 (con la estadística del lote); luego $\gamma$ y $\beta$ —parámetros aprendidos— ajustan la escala y el sesgo. Esto permite tasas de aprendizaje más altas y reduce la sensibilidad a la inicialización.
+
+![Dónde se aplica Batch Norm en la red](/img/optim/batchnorm.png)
+
+![Normalización, luego escalado y desplazamiento](/img/optim/escalado-desplazamiento.png)
+
+<SectionComplete client:visible id="optim-batchnorm" label="✓ Batch Norm" />
+
+## Heurísticas de diseño
+
+Juntando todo, algunas reglas prácticas para diseñar una red:
+
+- **Empareja activación e inicialización:** ReLU → He; sigmoid/tanh → Xavier.
+- **Empieza simple:** primero aumenta la **anchura** (neuronas por capa), luego la **profundidad**.
+- **Capas *bottleneck*** (estrechas en el medio) fuerzan representaciones compactas.
+- **Capa de salida según la tarea:** *softmax* para clasificación, lineal para regresión.
+
+$$ \mathrm{softmax}(z)_i = \frac{e^{z_i}}{\sum_k e^{z_k}} $$
+
+![Arquitectura con capa bottleneck](/img/optim/bottleneck-network.png)
+
+<Aside type="tip">
+Regularización + optimización no son detalles: deciden si una red entrena de forma estable y generaliza. Valida con validación cruzada, vigila la curva de pérdida y usa *early stopping*.
+</Aside>
+
+<SectionComplete client:visible id="optim-design" label="✓ Diseño" />

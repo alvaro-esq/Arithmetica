@@ -34,19 +34,22 @@ export function gridCells(
   yScale: Scale,
   seam = 0.6,
 ): GridCell[] {
-  const cw = (dom.xMax - dom.xMin) / grid;
+  // Independent x/y cell sizes so a non-square domain still tiles exactly. Using
+  // one stride for both axes (the old code) only covered `dom` when xRange==yRange.
+  const cwX = (dom.xMax - dom.xMin) / grid;
+  const cwY = (dom.yMax - dom.yMin) / grid;
   const cells: GridCell[] = [];
   for (let gy = 0; gy < grid; gy++) {
     for (let gx = 0; gx < grid; gx++) {
-      const x0 = dom.xMin + gx * cw;
-      const y0 = dom.yMin + gy * cw;
+      const x0 = dom.xMin + gx * cwX;
+      const y0 = dom.yMin + gy * cwY;
       cells.push({
-        cx: x0 + 0.5 * cw,
-        cy: y0 + 0.5 * cw,
+        cx: x0 + 0.5 * cwX,
+        cy: y0 + 0.5 * cwY,
         x: xScale(x0),
-        y: yScale(y0 + cw),
-        w: xScale(x0 + cw) - xScale(x0) + seam,
-        h: yScale(y0) - yScale(y0 + cw) + seam,
+        y: yScale(y0 + cwY),
+        w: xScale(x0 + cwX) - xScale(x0) + seam,
+        h: yScale(y0) - yScale(y0 + cwY) + seam,
       });
     }
   }
