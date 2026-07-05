@@ -29,8 +29,14 @@
     --sl-color-accent-low: var(--c-line);
   }
 
-  /* ---- Light mode (the project is off-white-first) ---- */
-  :root[data-theme='light'] {
+  /* ---- Light mode (the project is off-white-first) ----
+     The site is forced light (see the ThemeProvider/ThemeSelect overrides in
+     astro.config.mjs), but we also apply these to the base :root so the paper
+     palette holds even before the inline theme script runs — no flash of a
+     half-styled dark theme, and no dark-navy surface ever gets dark ink text. */
+  :root,
+  :root[data-theme='light'],
+  :root[data-theme='dark'] {
     --starlight-c-bg: var(--c-paper);
     --starlight-c-text: var(--c-ink);
 
@@ -234,18 +240,71 @@
     flex-direction: column;
     justify-content: safe center;
   }
+  /* Directional enter: forward slides come from the right, back from the left.
+     (No exit animation — slides swap via replaceChildren on a single host, so
+     there's only one node to animate; the directional enter reads as motion.)
+     prefers-reduced-motion (below) collapses these to an instant cut. */
   .deck-slide.entering {
-    animation: deck-in var(--dur) var(--ease-out) both;
+    animation: deck-in-fwd var(--dur) var(--ease-out) both;
   }
-  @keyframes deck-in {
+  .deck-slide.entering.back {
+    animation: deck-in-back var(--dur) var(--ease-out) both;
+  }
+  @keyframes deck-in-fwd {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translate3d(24px, 0, 0);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0);
     }
+  }
+  @keyframes deck-in-back {
+    from {
+      opacity: 0;
+      transform: translate3d(-24px, 0, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* Auto-hide chrome after a quiet spell (video-player idle). Movement reveals
+     it again (onmousemove → poke). The progress bar is never hidden — it's the
+     ambient state indicator. Focus-within keeps controls reachable for keyboard
+     users even while "idle". */
+  .deck-chrome,
+  .deck-foot,
+  .deck-nav {
+    transition:
+      opacity var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-out);
+  }
+  .deck-backdrop.idle {
+    cursor: none;
+  }
+  .deck-backdrop.idle .deck-chrome {
+    opacity: 0;
+    transform: translateY(-100%);
+    pointer-events: none;
+  }
+  .deck-backdrop.idle .deck-foot {
+    opacity: 0;
+    transform: translateY(100%);
+    pointer-events: none;
+  }
+  .deck-backdrop.idle .deck-nav {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .deck-backdrop.idle .deck-chrome:focus-within,
+  .deck-backdrop.idle .deck-foot:focus-within,
+  .deck-backdrop.idle .deck-nav:focus-within {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
   }
 
   /* The section's <h2> becomes the slide's headline (only inside the deck).
@@ -261,9 +320,25 @@
     border: none;
     padding: 0;
   }
-  /* Keep the interactive island comfortably sized and centered on the slide. */
-  .deck-slide :global(astro-island) {
+  /* Keep the interactive island comfortably sized and centered on the slide.
+     `astro-island` is a real custom-element tag — a plain type selector. (An
+     earlier `:global(...)` wrapper was Svelte/CSS-modules syntax, invalid in a
+     plain .css file, so the rule was silently dropped.) The resting hairline +
+     copper focus ring is the "this is interactive" affordance during a talk. */
+  .deck-slide astro-island {
     display: block;
+    position: relative;
+    border-radius: 0.75rem;
+    box-shadow:
+      0 0 0 1px var(--c-line),
+      0 2px 8px rgba(31, 29, 27, 0.06);
+    transition: box-shadow var(--dur) var(--ease-out);
+  }
+  .deck-slide astro-island:hover,
+  .deck-slide astro-island:focus-within {
+    box-shadow:
+      0 0 0 1px var(--c-copper),
+      0 4px 16px rgba(31, 29, 27, 0.1);
   }
 
   /* Side navigation arrows — large targets (Fitts), low-chrome. */

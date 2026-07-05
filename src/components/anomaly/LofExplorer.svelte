@@ -3,7 +3,7 @@
   import { lofScene, type Pt } from '../../lib/anomaly/datasets';
   import { type Domain } from '../../lib/svm/geometry';
   import { draggablePoints } from '../../lib/svm/drag';
-  import { kNearest, kDistance, lof, lofAll } from '../../lib/anomaly/lof';
+  import { kNearest, kDistance, lofAll } from '../../lib/anomaly/lof';
   import { ACCENT, NEG, AXIS, PAPER, SUCCESS, WARN } from '../../lib/svm/colors';
 
   // Local Outlier Factor explorer. P (index 0) is draggable; everything else is a
@@ -25,10 +25,12 @@
   const yScale = scaleLinear().domain([dom.yMin, dom.yMax]).range([height - pad, pad]);
 
   // Recomputed live as P moves (points is mutated in place by the drag action).
-  let pLof = $derived(lof(points, 0, k));
+  // lofAll computes every point's LOF in one pass; P is index 0, so read it from
+  // there instead of running the full single-point lof() a second time per frame.
   let kdist = $derived(kDistance(points, 0, k));
   let neighbors = $derived(kNearest(points, 0, k));
   let allLof = $derived(lofAll(points, k));
+  let pLof = $derived(allLof[0] ?? 1);
 
   // Pixel radius of the k-distance circle (scale is uniform, so use x).
   let rPix = $derived(xScale(dom.xMin + kdist) - xScale(dom.xMin));

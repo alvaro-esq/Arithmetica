@@ -2,7 +2,6 @@
   import { scaleLinear } from 'd3-scale';
   import { ACCENT, NEG, AXIS, SUCCESS, MUTED } from '../lib/svm/colors';
   import Celebrate from './ui/Celebrate.svelte';
-  import { markComplete } from '../lib/progress';
 
   let slope = $state(1);
   let intercept = $state(0);
@@ -51,7 +50,6 @@
     if (goodFit && !celebrated) {
       celebrated = true;
       celebrate = true;
-      markComplete('lr-model');
     }
   });
 </script>
@@ -92,19 +90,19 @@
 
   <div class="flex flex-wrap items-center justify-between gap-3">
     <span class="text-sm" style="color: {MUTED}">
-      Mean squared error:
+      Error cuadrático medio:
       <strong style="color: {goodFit ? SUCCESS : ACCENT}">{mse.toFixed(3)}</strong>
     </span>
-    <Celebrate active={celebrate} label="Great fit!" />
+    <Celebrate active={celebrate} label="¡Buen ajuste!" />
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <label class="block text-sm font-medium mb-1">Slope (m): {slope}</label>
+      <label class="block text-sm font-medium mb-1">Pendiente (m): {slope.toFixed(1)}</label>
       <input type="range" bind:value={slope} min="-2" max="2" step="0.1" class="w-full accent-interactive" />
     </div>
     <div>
-      <label class="block text-sm font-medium mb-1">Intercept (b): {intercept}</label>
+      <label class="block text-sm font-medium mb-1">Ordenada (b): {intercept.toFixed(1)}</label>
       <input type="range" bind:value={intercept} min="-3" max="3" step="0.1" class="w-full accent-interactive" />
     </div>
   </div>

@@ -11,18 +11,17 @@ import LessonProgress from '../../../components/ui/LessonProgress.svelte';
 import SectionComplete from '../../../components/ui/SectionComplete.svelte';
 import PresentMode from '../../../components/ui/PresentMode.svelte';
 
-<PresentMode client:idle title="Reinforcement Learning" />
+<PresentMode client:load title="Reinforcement Learning" />
 
 <LessonProgress
-  client:load
-  title="Tu progreso en Reinforcement Learning"
+  title="En esta lección"
   sections={[
-    { id: 'rl-intro', label: 'Introducción' },
-    { id: 'rl-mdp', label: 'MDP' },
-    { id: 'rl-value', label: 'Funciones de valor' },
-    { id: 'rl-bellman', label: 'Bellman' },
-    { id: 'rl-stochastic', label: 'Estocástico' },
-    { id: 'rl-networks', label: 'Value/Policy Nets' },
+    { id: 'rl-intro', label: 'Introducción', slug: 'qué-es-el-aprendizaje-por-refuerzo' },
+    { id: 'rl-mdp', label: 'MDP', slug: 'procesos-de-decisión-de-markov-mdp' },
+    { id: 'rl-value', label: 'Funciones de valor', slug: 'funciones-de-valor-y-gridworld' },
+    { id: 'rl-bellman', label: 'Bellman', slug: 'la-ecuación-de-bellman' },
+    { id: 'rl-stochastic', label: 'Estocástico', slug: 'transiciones-determinísticas-vs-estocásticas' },
+    { id: 'rl-networks', label: 'Value/Policy Nets', slug: 'value-y-policy-networks-deep-rl' },
   ]}
 />
 
@@ -38,7 +37,7 @@ Es el paradigma detrás de **AlphaGo**, la robótica autónoma, los sistemas de 
 
 ![Un problema de RL del mundo real: estados, acciones y recompensa](/img/rl/go-example.png)
 
-<SectionComplete client:visible id="rl-intro" label="✓ Introducción" />
+<SectionComplete id="rl-intro" label="✓ Introducción" />
 
 ## Procesos de Decisión de Markov (MDP)
 
@@ -52,7 +51,7 @@ Un **Gridworld** es el MDP de juguete por excelencia: una rejilla donde el agent
 
 ![Gridworld: estados, una meta y un peligro](/img/rl/gridworld.png)
 
-<SectionComplete client:visible id="rl-mdp" label="✓ MDP" />
+<SectionComplete id="rl-mdp" label="✓ MDP" />
 
 ## Funciones de valor y Gridworld
 
@@ -76,7 +75,7 @@ $$ Q(s,a) = \mathbb{E}\!\left[\sum_{t=0}^{\infty} \gamma^t R_{t+1} \;\middle|\; 
 La **política greedy** se lee directamente del valor: en cada estado, ir hacia el vecino de mayor $V$. Por eso las flechas siempre apuntan "cuesta arriba" hacia la meta.
 </Aside>
 
-<SectionComplete client:visible id="rl-value" label="✓ Funciones de valor" />
+<SectionComplete id="rl-value" label="✓ Funciones de valor" />
 
 ## La ecuación de Bellman
 
@@ -94,7 +93,7 @@ El factor de descuento $\gamma$ controla el **horizonte**: con $\gamma$ cercano 
 $\gamma \approx 1$: el agente planifica a largo plazo y "ve" metas lejanas. $\gamma$ pequeño: el agente descuenta tanto el futuro que el coste de cada paso pesa más que una recompensa distante — y puede no llegar nunca.
 </Aside>
 
-<SectionComplete client:visible id="rl-bellman" label="✓ Bellman" />
+<SectionComplete id="rl-bellman" label="✓ Bellman" />
 
 ## Transiciones determinísticas vs estocásticas
 
@@ -110,7 +109,7 @@ Sube la probabilidad de resbalar y vuelve a resolver: los valores cerca del peli
 La incertidumbre cambia la decisión óptima. Esto conecta con el dilema **exploración vs explotación**: el agente debe probar acciones nuevas (explorar) para descubrir recompensas, pero también aprovechar lo que ya sabe (explotar) para no perder recompensa.
 </Aside>
 
-<SectionComplete client:visible id="rl-stochastic" label="✓ Estocástico" />
+<SectionComplete id="rl-stochastic" label="✓ Estocástico" />
 
 ## Value y Policy Networks (Deep RL)
 
@@ -134,4 +133,4 @@ Estos métodos son potentes pero **costosos**: requieren muchísimas interaccion
 El salto conceptual: de **tablas exactas** en Gridworld a **redes que generalizan** en espacios enormes. La ecuación de Bellman sigue siendo el corazón — solo que ahora $V$ y $\pi$ son redes neuronales en lugar de tablas.
 </Aside>
 
-<SectionComplete client:visible id="rl-networks" label="✓ Value/Policy Nets" />
+<SectionComplete id="rl-networks" label="✓ Value/Policy Nets" />

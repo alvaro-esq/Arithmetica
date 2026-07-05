@@ -25,7 +25,11 @@ export function stepLoop(opts: StepLoopOpts): () => void {
   let raf = 0;
   let last = 0;
   function tick(ts: number) {
-    if (ts - last > opts.interval) {
+    // Seed `last` on the first frame: `ts` is a page-relative timestamp already
+    // in the thousands, so comparing against 0 would fire the first step with no
+    // delay. Anchoring to the first tick makes the initial reveal wait `interval`.
+    if (last === 0) last = ts;
+    if (ts - last >= opts.interval) {
       last = ts;
       if (opts.step() >= opts.total) {
         opts.onDone();

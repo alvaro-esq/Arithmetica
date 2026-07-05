@@ -1,7 +1,7 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
   import { POS, NEG, ACCENT, PAPER } from '../../lib/svm/colors';
-  import { buildForest, forestProba, makeForestAccumulator } from '../../lib/dt/ensemble';
+  import { forestProba, makeForestAccumulator } from '../../lib/dt/ensemble';
   import { classify } from '../../lib/dt/cart';
   import { gridCells } from '../../lib/viz/grid';
   import type { BuildOpts, LPoint, TreeNode } from '../../lib/dt/types';
@@ -19,14 +19,14 @@
 
   const data = $derived<LPoint[]>(datasetName === 'moons' ? moons(110, 3) : xor(120, 5));
   const opts = $derived<BuildOpts>({ maxDepth, minSamples: 2, minGain: 0, nClasses: 2 });
-  // The decorrelated forest uses maxFeatures=1 (random-feature subsampling). An
-  // additive accumulator, rebuilt only when the dataset/depth changes, so dragging
-  // the tree-count slider grows just the new trees instead of the whole forest.
-  const grow = $derived(makeForestAccumulator(data, opts, 42, 1));
-  // A lone tree restricted to one feature is degenerate, so when showing a single
-  // tree we build one that uses both features (cheap: one tree).
-  const singleTreeForest = $derived(buildForest(data, 1, opts, 42, 2));
-  const forest = $derived(nTrees === 1 ? singleTreeForest : grow(nTrees));
+  // One additive accumulator drives the whole slider so tree index i is identical
+  // at every position: growing N→N+k only builds the k new trees. The decorrelated
+  // trees use maxFeatures=1 (random-feature subsampling); `firstFull` makes tree 0
+  // use both features so the n=1 view isn't a degenerate single-axis tree — and,
+  // crucially, so the boundary refines continuously instead of snapping at 1→2
+  // (which it did when n=1 used a SEPARATE both-feature forest).
+  const grow = $derived(makeForestAccumulator(data, opts, 42, 1, true));
+  const forest = $derived(grow(nTrees));
 
   const W = 420;
   const pad = 16;

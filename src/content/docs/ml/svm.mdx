@@ -12,15 +12,14 @@ import LessonProgress from '../../../components/ui/LessonProgress.svelte';
 import SectionComplete from '../../../components/ui/SectionComplete.svelte';
 import PresentMode from '../../../components/ui/PresentMode.svelte';
 
-<PresentMode client:idle title="Support Vector Machines y Kernel Methods" />
+<PresentMode client:load title="Support Vector Machines y Kernel Methods" />
 
 <LessonProgress
-  client:load
-  title="Tu progreso en SVM y Kernels"
+  title="En esta lección"
   sections={[
-    { id: 'svm-margin', label: 'Margen máximo' },
-    { id: 'svm-soft', label: 'Soft margin' },
-    { id: 'svm-kernel', label: 'Kernels' },
+    { id: 'svm-margin', label: 'Margen máximo', slug: 'conceptos-básicos' },
+    { id: 'svm-soft', label: 'Soft margin', slug: 'soft-margin-svm' },
+    { id: 'svm-kernel', label: 'Kernels', slug: 'tipos-de-kernel' },
   ]}
 />
 
@@ -40,7 +39,7 @@ En la siguiente visualización, gira la recta con el ángulo $\theta$ y deslíza
 
 <MaxMarginHyperplane client:visible />
 
-<SectionComplete client:visible id="svm-margin" label="✓ Margen máximo" />
+<SectionComplete id="svm-margin" label="✓ Margen máximo" />
 
 ## El problema de optimización
 
@@ -87,7 +86,7 @@ Mueve el deslizador de $C$ y observa cómo se recalcula la recta óptima. Los se
 
 <SoftMarginSlack client:visible />
 
-<SectionComplete client:visible id="svm-soft" label="✓ Soft margin" />
+<SectionComplete id="svm-soft" label="✓ Soft margin" />
 
 ## El truco del kernel
 
@@ -174,7 +173,7 @@ predictions = clf.predict(X_test)
 
 **Recomendación:** prefiere `'scale'` para datos con alta variabilidad; usa `'auto'` con datos bien escalados o cuando busques un enfoque más sencillo.
 
-<SectionComplete client:visible id="svm-kernel" label="✓ Kernels" />
+<SectionComplete id="svm-kernel" label="✓ Kernels" />
 
 ## Resumen
 

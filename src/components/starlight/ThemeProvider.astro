@@ -1,0 +1,15 @@
+---
+// Override of Starlight's ThemeProvider. Arithmetica is deliberately light /
+// "paper"-first (Ink & Copper), and its CSS only themes :root[data-theme='light'].
+// The stock provider reads localStorage / prefers-color-scheme and can set
+// data-theme='dark', leaving Starlight's dark navy surfaces paired with the
+// site's dark ink text (the "black text on dark blue" bug). We force light and
+// drop the picker-sync entirely. Inlined to avoid FOUC, same as the original.
+---
+
+<script is:inline>
+  // Always light: no localStorage, no prefers-color-scheme.
+  document.documentElement.dataset.theme = 'light';
+  // Keep the global that other Starlight scripts may call, as a no-op.
+  window.StarlightThemeProvider = { updatePickers() {} };
+</script>

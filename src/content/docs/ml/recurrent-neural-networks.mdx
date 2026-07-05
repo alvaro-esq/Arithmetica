@@ -11,18 +11,17 @@ import LessonProgress from '../../../components/ui/LessonProgress.svelte';
 import SectionComplete from '../../../components/ui/SectionComplete.svelte';
 import PresentMode from '../../../components/ui/PresentMode.svelte';
 
-<PresentMode client:idle title="Redes Neuronales Recurrentes" />
+<PresentMode client:load title="Redes Neuronales Recurrentes" />
 
 <LessonProgress
-  client:load
-  title="Tu progreso en Redes Neuronales Recurrentes"
+  title="En esta lección"
   sections={[
-    { id: 'rnn-motivation', label: 'Recurrencia' },
-    { id: 'rnn-hidden', label: 'Estado oculto' },
-    { id: 'rnn-types', label: 'Tipos de RNN' },
-    { id: 'rnn-bptt', label: 'BPTT' },
-    { id: 'rnn-gates', label: 'LSTM y GRU' },
-    { id: 'rnn-attention', label: 'Atención' },
+    { id: 'rnn-motivation', label: 'Recurrencia', slug: 'por-qué-recurrencia' },
+    { id: 'rnn-hidden', label: 'Estado oculto', slug: 'estado-oculto-la-memoria' },
+    { id: 'rnn-types', label: 'Tipos de RNN', slug: 'tipos-de-rnn' },
+    { id: 'rnn-bptt', label: 'BPTT', slug: 'entrenamiento-bptt-y-el-gradiente-que-se-desvanece' },
+    { id: 'rnn-gates', label: 'LSTM y GRU', slug: 'lstm-y-gru' },
+    { id: 'rnn-attention', label: 'Atención', slug: 'atención' },
   ]}
 />
 
@@ -36,7 +35,7 @@ A diferencia de una red feedforward, una RNN procesa **un *timestep* a la vez**.
 
 Esa reutilización es la clave: la red puede manejar secuencias de cualquier longitud y, sobre todo, **recordar** lo que vio antes para interpretar lo que viene.
 
-<SectionComplete client:visible id="rnn-motivation" label="✓ Recurrencia" />
+<SectionComplete id="rnn-motivation" label="✓ Recurrencia" />
 
 ## Estado oculto: la memoria
 
@@ -62,7 +61,7 @@ El peso recurrente $W_{hh}$ es lo que decide si la red **recuerda u olvida**. Mu
 El estado oculto $h_t$ es la **memoria** de la red: acumula información a medida que avanza la secuencia, y es lo que diferencia a una RNN de una red tradicional.
 </Aside>
 
-<SectionComplete client:visible id="rnn-hidden" label="✓ Estado oculto" />
+<SectionComplete id="rnn-hidden" label="✓ Estado oculto" />
 
 ## Tipos de RNN
 
@@ -84,7 +83,7 @@ Según cómo se conecten entradas y salidas, hay cuatro arquitecturas típicas:
 
 ![Encoder-Decoder: el encoder condensa, el decoder genera](/img/rnn/encoder-decoder.png)
 
-<SectionComplete client:visible id="rnn-types" label="✓ Tipos de RNN" />
+<SectionComplete id="rnn-types" label="✓ Tipos de RNN" />
 
 ## Entrenamiento: BPTT y el gradiente que se desvanece
 
@@ -110,7 +109,7 @@ Si cada factor es menor que 1, el producto **se desvanece** geométricamente: el
 El desvanecimiento del gradiente es la gran limitación de las RNN simples: "olvidan" el principio de las secuencias largas. Esto motivó arquitecturas con **puertas** —LSTM y GRU— diseñadas para preservar el flujo del gradiente.
 </Aside>
 
-<SectionComplete client:visible id="rnn-bptt" label="✓ BPTT" />
+<SectionComplete id="rnn-bptt" label="✓ BPTT" />
 
 ## LSTM y GRU
 
@@ -136,7 +135,7 @@ La **GRU** (Gated Recurrent Unit) simplifica la idea: fusiona los estados (no ha
 | **LSTM** | Fuerte | Muchos | Dependencias largas y complejas |
 | **GRU** | Buena | Intermedios | Buen equilibrio coste/rendimiento |
 
-<SectionComplete client:visible id="rnn-gates" label="✓ LSTM y GRU" />
+<SectionComplete id="rnn-gates" label="✓ LSTM y GRU" />
 
 ## Atención
 
@@ -160,4 +159,4 @@ Cuando $Q$, $K$ y $V$ vienen de la **misma** secuencia hablamos de *self-attenti
 La atención rompe el cuello de botella del estado único: en lugar de recordar todo en un vector, la red **mira directamente** a la parte relevante de la entrada. Es el salto conceptual que llevó de las RNN a los Transformers.
 </Aside>
 
-<SectionComplete client:visible id="rnn-attention" label="✓ Atención" />
+<SectionComplete id="rnn-attention" label="✓ Atención" />

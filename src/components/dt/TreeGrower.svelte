@@ -8,7 +8,6 @@
   import { moons, xor, blobs } from '../../lib/dt/datasets';
   import { gridCells } from '../../lib/viz/grid';
   import Celebrate from '../ui/Celebrate.svelte';
-  import { markComplete } from '../../lib/progress';
 
   // "Grow the tree" one greedy split at a time. Watch the partition refine and the
   // tree deepen; the stopping-criteria sliders show exactly when growth halts.
@@ -95,15 +94,6 @@
   const accuracy = $derived(
     data.filter((p) => classify(tree, p) === p.label).length / (data.length || 1),
   );
-
-  // Section complete once the learner has actually grown the tree to a stopping
-  // point (or perfect accuracy) — reachable with default sliders, where growth
-  // naturally halts at ~94% on moons.
-  $effect(() => {
-    if (stats.depth > 0 && (exhausted || accuracy >= 0.999)) {
-      markComplete('dt-growing');
-    }
-  });
 
   // Celebration is reserved for the genuine peak: a tree that classifies every
   // point. Fire once per grown tree.

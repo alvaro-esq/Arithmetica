@@ -74,12 +74,20 @@ export function buildForest(
  * the whole forest each tick. `to(n)` returns a Forest with exactly `n` trees;
  * shrinking `n` truncates (no rebuild). `maxFeatures` is fixed for the accumulator
  * so a given tree index is identical at every slider position.
+ *
+ * `firstFull` makes tree index 0 use BOTH features regardless of `maxFeatures`.
+ * This keeps a tree-count slider continuous: a lone maxFeatures=1 tree is
+ * degenerate (splits on one axis only), so the n=1 view needs both features — but
+ * building it as a SEPARATE forest snaps the boundary at the 1→2 step. Growing it
+ * as tree 0 of this same accumulator means n=2,3,… only *append* decorrelated
+ * trees and the boundary refines smoothly instead of jumping.
  */
 export function makeForestAccumulator(
   points: LPoint[],
   opts: BuildOpts,
   seed: number,
   maxFeatures = 2,
+  firstFull = false,
 ) {
   const root = mulberry32(seed);
   const n = points.length;
@@ -88,11 +96,13 @@ export function makeForestAccumulator(
   const oobMask: boolean[][] = [];
 
   function growOne() {
+    const isFirst = trees.length === 0;
     const treeRng = mulberry32(childSeed(root));
     const idx = bootstrapIndices(n, treeRng);
     const inBag = new Set(idx);
     oobMask.push(points.map((_, i) => !inBag.has(i)));
-    const features: Feature[] = maxFeatures >= 2 ? allFeatures : [treeRng() < 0.5 ? 0 : 1];
+    const useAll = maxFeatures >= 2 || (firstFull && isFirst);
+    const features: Feature[] = useAll ? allFeatures : [treeRng() < 0.5 ? 0 : 1];
     trees.push(buildTree(resample(points, idx), { ...opts, features }));
   }
 

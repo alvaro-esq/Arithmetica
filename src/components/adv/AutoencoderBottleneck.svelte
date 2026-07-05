@@ -42,19 +42,18 @@
   function isOutlier(i: number): boolean {
     return i >= data.outlierStart;
   }
-  // Per-point error threshold to flag an anomaly: a few × the mean reconstruction
-  // error of the inliers. Points above it (a ring in the plot) are what an
-  // autoencoder reports as anomalies — the concrete payoff of the badly-reconstructed
-  // outliers. Only meaningful while the outliers are shown.
-  const THRESH_MULT = 3;
-  let inlierMean = $derived.by(() => {
-    const n = Math.min(data.outlierStart, rec.perPointErr.length);
-    if (n === 0) return 0;
-    let sum = 0;
-    for (let i = 0; i < n; i++) sum += rec.perPointErr[i];
-    return sum / n;
-  });
-  let threshold = $derived(inlierMean * THRESH_MULT);
+  // Per-point error threshold to flag an anomaly. It must sit in the GAP between
+  // the badly-reconstructed outliers and the well-reconstructed inliers — a plain
+  // "3× the inlier mean" fails, because an off-axis inlier can exceed 3× its own
+  // mean and get wrongly flagged (and at k=D the reconstruction is exact, so that
+  // multiple is ~0 and float noise flags points). Instead: a fraction of the
+  // largest error (which scales with how far the outliers sit), floored by a small
+  // absolute value so the perfect-reconstruction case (k=D) flags nothing. This
+  // flags exactly the planted outliers on this dataset (verified in Node).
+  const THRESH_FRAC = 0.25; // must exceed 25% of the worst reconstruction error
+  const THRESH_FLOOR = 0.3; // …and clear this absolute floor (kills k=D float noise)
+  let maxErr = $derived(rec.perPointErr.length ? Math.max(...rec.perPointErr) : 0);
+  let threshold = $derived(Math.max(maxErr * THRESH_FRAC, THRESH_FLOOR));
   function isFlagged(i: number): boolean {
     return showOutliers && rec.perPointErr[i] > threshold;
   }
@@ -105,7 +104,7 @@
     </div>
     {#if showOutliers}
       <div class="text-xs text-muted">
-        Umbral de anomalía (error {'>'} {THRESH_MULT}× la media de los inliers):
+        Umbral de anomalía (error de reconstrucción muy por encima del resto):
         <strong style="color: {WARN}">{flaggedCount}</strong> {flaggedCount === 1 ? 'punto marcado' : 'puntos marcados'} (anillo).
       </div>
     {/if}

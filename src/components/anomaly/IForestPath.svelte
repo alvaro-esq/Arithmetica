@@ -1,7 +1,7 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale';
   import { iforestScene } from '../../lib/anomaly/datasets';
-  import { isolationPath } from '../../lib/anomaly/iforest';
+  import { isolationPath, averagePathLength } from '../../lib/anomaly/iforest';
   import { type Domain } from '../../lib/svm/geometry';
   import { ACCENT, NEG, POS, AXIS, PAPER, WARN, MUTED } from '../../lib/svm/colors';
 
@@ -45,9 +45,15 @@
     return best;
   });
   let targetIdx = $derived(target === 'outlier' ? outlierIdx : inlierIdx);
-  // Path for the selected target (animated) and the other (for the comparison).
+  let otherIdx = $derived(target === 'outlier' ? inlierIdx : outlierIdx);
+  // The single path we ANIMATE (the box shrinking around the target, cut by cut).
   let cuts = $derived(isolationPath(pts, targetIdx, curSeed));
-  let otherLen = $derived(isolationPath(pts, target === 'outlier' ? inlierIdx : outlierIdx, curSeed).length);
+  // The COMPARISON numbers use the expected path length over a small ensemble, not
+  // a single sample: one random path is high-variance and on a few seeds the
+  // interior inlier isolates in ≤ the outlier's cuts, contradicting the caption.
+  // Averaging (what a real Isolation Forest scores on) makes the contrast hold.
+  let targetAvg = $derived(averagePathLength(pts, targetIdx, curSeed));
+  let otherAvg = $derived(averagePathLength(pts, otherIdx, curSeed));
 
   // The shrinking bounding box: fold the revealed cuts into a [min,max]² region
   // around the target.
@@ -134,12 +140,13 @@
   </div>
 
   <div class="flex flex-wrap items-center gap-4 text-sm text-ink">
-    <span>Divisiones mostradas: <strong>{shown}</strong></span>
-    <span>
-      Para aislar este punto: <strong style="color: {WARN}">{cuts.length}</strong>
+    <span>Divisiones mostradas: <strong>{shown}</strong> de {cuts.length}
       {#if isolated}<span class="text-xs text-muted">(¡aislado!)</span>{/if}
     </span>
-    <span class="text-xs text-muted">El {target === 'outlier' ? 'punto del clúster' : 'outlier'} necesita {otherLen} divisiones.</span>
+    <span>
+      Camino promedio: <strong style="color: {WARN}">{targetAvg.toFixed(1)}</strong> divisiones
+    </span>
+    <span class="text-xs text-muted">El {target === 'outlier' ? 'punto del clúster' : 'outlier'} necesita {otherAvg.toFixed(1)} en promedio.</span>
   </div>
   <p class="text-xs text-muted">Las anomalías se aíslan en <strong>menos</strong> divisiones (camino más corto) → mayor puntuación de anomalía.</p>
 </div>

@@ -28,23 +28,26 @@ function sectionHeading(node: Element): HTMLHeadingElement | null {
 }
 
 /** Nodes that must never travel into the deck: page scripts/styles injected by
- *  the islands, and the PresentMode island itself (it renders the overlay — moving
- *  its own host node would detach the running deck). */
+ *  the islands, the PresentMode island itself (it renders the overlay — moving
+ *  its own host node would detach the running deck), and the LessonProgress
+ *  section index (its jump links target section anchors that live in OTHER,
+ *  currently-detached slides, so it would render dead links inside a slide). */
 function isDeckNoise(node: Element): boolean {
   if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return true;
   const island =
     node.tagName === 'ASTRO-ISLAND' ? node : node.querySelector(':scope > astro-island');
   const url = island?.getAttribute('component-url') ?? '';
-  return /PresentMode/.test(url);
+  return /PresentMode|LessonProgress/.test(url);
 }
 
 /**
  * Group the direct children of a `.sl-markdown-content` container by section
  * heading. A new group starts at each `<h2>` (bare or Starlight-wrapped); any
- * nodes before the first heading (intro prose, the LessonProgress / PresentMode
- * islands) form a leading group with title ''. Empty groups are dropped. The
- * TOC's `<h2 id="starlight__on-this-page">` lives outside this container, so it
- * never appears here.
+ * nodes before the first heading (intro prose) form a leading group with title
+ * ''. The PresentMode and LessonProgress islands are filtered out by isDeckNoise
+ * (see above), so they never reach a slide. Empty groups are dropped. The TOC's
+ * `<h2 id="starlight__on-this-page">` lives outside this container, so it never
+ * appears here.
  */
 export function partitionByHeadings(container: Element): SlideGroup[] {
   const groups: SlideGroup[] = [];
@@ -70,6 +73,6 @@ export function partitionByHeadings(container: Element): SlideGroup[] {
   if (current && current.nodes.length) groups.push(current);
 
   // Drop a leading intro group that carries no real content (e.g. only an empty
-  // wrapper) but keep it when it holds intro prose / the progress island.
+  // wrapper) but keep it when it holds intro prose.
   return groups.filter((g) => g.nodes.some((n) => (n.textContent ?? '').trim() !== '' || n.children.length > 0));
 }

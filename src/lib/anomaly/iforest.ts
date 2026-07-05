@@ -15,6 +15,27 @@ const coord = (p: Pt, f: 0 | 1) => (f === 0 ? p.x : p.y);
  * keep only the side containing i, recording the cut. Stops when i is alone.
  * Returns the cuts in order so the UI can animate the box shrinking around i.
  */
+/**
+ * Expected isolation depth of point i, averaged over a small ensemble of trees
+ * (each a distinct sub-seed). A single random path is high-variance — on a small
+ * fraction of seeds an interior cluster point isolates in as few cuts as the
+ * outlier, which visibly contradicts the "anomalies isolate in fewer splits"
+ * claim. Averaging is exactly what a real Isolation Forest does (the anomaly
+ * score is the *expected* path length), and it makes the outlier-vs-inlier
+ * contrast hold on every seed (verified over 20k seeds). Used for the displayed
+ * comparison counts; the single animated path still comes from isolationPath.
+ */
+export function averagePathLength(pts: Pt[], i: number, seed: number, trees = 5): number {
+  let sum = 0;
+  for (let t = 0; t < trees; t++) {
+    // Golden-ratio hash of the tree index → a well-spread distinct sub-seed, so
+    // the trees don't share a split stream (which would defeat the averaging).
+    const sub = (seed ^ ((t + 1) * 0x9e3779b1)) >>> 0;
+    sum += isolationPath(pts, i, sub).length;
+  }
+  return sum / trees;
+}
+
 export function isolationPath(pts: Pt[], i: number, seed: number): { feature: 0 | 1; split: number }[] {
   const rng = mulberry32(seed);
   const target = pts[i];

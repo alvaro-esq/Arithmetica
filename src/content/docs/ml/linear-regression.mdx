@@ -1,38 +1,31 @@
 ---
-title: Linear Regression
-description: Interactive exploration of simple linear regression models
+title: Regresión Lineal
+description: Exploración interactiva de modelos de regresión lineal simple
 ---
 
 import InteractiveRegression from '../../../components/InteractiveRegression.svelte';
-import LessonProgress from '../../../components/ui/LessonProgress.svelte';
 import PresentMode from '../../../components/ui/PresentMode.svelte';
 
-<PresentMode client:idle title="Linear Regression" />
+<PresentMode client:load title="Regresión Lineal" />
 
-<LessonProgress
-  client:load
-  title="Your progress in Linear Regression"
-  sections={[{ id: 'lr-model', label: 'Fit the line' }]}
-/>
-
-Linear regression models the relationship between a dependent variable $y$ and an independent variable $x$. The simple linear model is given by:
+La regresión lineal modela la relación entre una variable dependiente $y$ y una variable independiente $x$. El modelo lineal simple es:
 
 $$ y = mx + b $$
 
-where:
-- $m$ is the slope (rate of change)
-- $b$ is the y-intercept (value when $x = 0$)
+donde:
+- $m$ es la pendiente (tasa de cambio)
+- $b$ es la ordenada al origen (valor cuando $x = 0$)
 
-## Interactive Exploration
+## Exploración interactiva
 
-Adjust the slope and intercept below to observe how the regression line fits the data.
+Ajusta la pendiente y la ordenada para observar cómo la recta de regresión se ajusta a los datos.
 
 <InteractiveRegression client:visible />
 
-## Model Interpretation
+## Interpretación del modelo
 
-The slope parameter $m$ indicates the expected change in $y$ for a one-unit increase in $x$. The intercept $b$ represents the predicted value of $y$ when $x = 0$.
+La pendiente $m$ indica el cambio esperado en $y$ por cada aumento de una unidad en $x$. La ordenada $b$ es el valor predicho de $y$ cuando $x = 0$.
 
-When fitting data, we seek values of $m$ and $b$ that minimize the sum of squared residuals:
+Al ajustar los datos, buscamos los valores de $m$ y $b$ que minimizan la suma de los residuos al cuadrado:
 
 $$ \min_{m,b} \sum_{i=1}^n (y_i - (mx_i + b))^2 $$

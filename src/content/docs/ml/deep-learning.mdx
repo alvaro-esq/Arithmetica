@@ -11,18 +11,17 @@ import LessonProgress from '../../../components/ui/LessonProgress.svelte';
 import SectionComplete from '../../../components/ui/SectionComplete.svelte';
 import PresentMode from '../../../components/ui/PresentMode.svelte';
 
-<PresentMode client:idle title="Introducción a Deep Learning" />
+<PresentMode client:load title="Introducción a Deep Learning" />
 
 <LessonProgress
-  client:load
-  title="Tu progreso en Deep Learning"
+  title="En esta lección"
   sections={[
-    { id: 'dl-intro', label: 'ML vs DL' },
-    { id: 'dl-perceptron', label: 'Perceptrón' },
-    { id: 'dl-sigmoid', label: 'Sigmoide' },
-    { id: 'dl-architecture', label: 'Arquitectura' },
-    { id: 'dl-gradient', label: 'Gradiente' },
-    { id: 'dl-backprop', label: 'Backpropagation' },
+    { id: 'dl-intro', label: 'ML vs DL', slug: 'qué-es-deep-learning' },
+    { id: 'dl-perceptron', label: 'Perceptrón', slug: 'el-perceptrón' },
+    { id: 'dl-sigmoid', label: 'Sigmoide', slug: 'neuronas-sigmoides' },
+    { id: 'dl-architecture', label: 'Arquitectura', slug: 'arquitectura-de-redes' },
+    { id: 'dl-gradient', label: 'Gradiente', slug: 'función-de-costo-y-descenso-de-gradiente' },
+    { id: 'dl-backprop', label: 'Backpropagation', slug: 'backpropagation' },
   ]}
 />
 
@@ -36,7 +35,7 @@ En el aprendizaje clásico, gran parte del trabajo es **diseñar a mano** las va
 
 La idea no es nueva —del perceptrón de Rosenblatt (1958) a las redes multicapa con retropropagación (1980s)— pero solo despegó al combinarse con **grandes datos y GPUs**. A cambio de su poder, exige muchos datos, cómputo y cuidado contra el sobreajuste.
 
-<SectionComplete client:visible id="dl-intro" label="✓ ML vs DL" />
+<SectionComplete id="dl-intro" label="✓ ML vs DL" />
 
 ## El Perceptrón
 
@@ -56,7 +55,7 @@ Pero un perceptrón solo traza **una recta**: $w\cdot x + b = 0$. Elige una comp
 
 Esa imposibilidad —junto a que la función **escalón no es diferenciable**— es lo que motiva los dos grandes saltos que siguen: una activación suave y varias capas.
 
-<SectionComplete client:visible id="dl-perceptron" label="✓ Perceptrón" />
+<SectionComplete id="dl-perceptron" label="✓ Perceptrón" />
 
 ## Neuronas Sigmoides
 
@@ -72,7 +71,7 @@ Ahora un cambio pequeño en $w$ o $b$ produce un cambio pequeño y **medible** e
 La clave no es la fórmula, sino que la curva es **diferenciable**. Esa pendiente (la línea verde) es exactamente la señal que el descenso de gradiente necesita para aprender.
 </Aside>
 
-<SectionComplete client:visible id="dl-sigmoid" label="✓ Sigmoide" />
+<SectionComplete id="dl-sigmoid" label="✓ Sigmoide" />
 
 ## Arquitectura de redes
 
@@ -90,7 +89,7 @@ La misma idea escala. Para reconocer dígitos manuscritos (MNIST), la entrada so
 
 ![Red 784 → 15 → 10 para clasificar dígitos](/img/dl/mnist-network.png)
 
-<SectionComplete client:visible id="dl-architecture" label="✓ Arquitectura" />
+<SectionComplete id="dl-architecture" label="✓ Arquitectura" />
 
 ## Función de costo y descenso de gradiente
 
@@ -106,7 +105,7 @@ Arrastra el punto inicial y ajusta $\eta$. Demasiado **alto** y el descenso osci
 
 <GradientDescent client:visible />
 
-<SectionComplete client:visible id="dl-gradient" label="✓ Gradiente" />
+<SectionComplete id="dl-gradient" label="✓ Gradiente" />
 
 ## Backpropagation
 
@@ -128,4 +127,4 @@ $$ \frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k\,\delta^l_j \tag{BP4} $$
 No hace falta memorizar la derivación. Quédate con el flujo: **hacia adelante** para calcular la salida → **error en la salida** → **propaga $\delta$ hacia atrás** → **actualiza** $w$ y $b$ con un paso de gradiente.
 </Aside>
 
-<SectionComplete client:visible id="dl-backprop" label="✓ Backpropagation" />
+<SectionComplete id="dl-backprop" label="✓ Backpropagation" />

@@ -8,7 +8,6 @@
   import { pegasos } from '../../lib/svm/solvers';
   import { POS, NEG, ACCENT, AXIS, PAPER } from '../../lib/svm/colors';
   import Celebrate from '../ui/Celebrate.svelte';
-  import { markComplete } from '../../lib/progress';
 
   // Drag the points or rotate / shift the decision line and watch the margin.
   // Support vectors (the closest point on each side) light up; the margin band
@@ -82,7 +81,6 @@
     // Milestone: the optimum actually separates the data. Celebrate the peak.
     const solved = points.every((p) => p.label * signedDistance(m.w, m.b, p) > 0);
     if (solved) {
-      markComplete('svm-margin');
       celebrate = false;
       queueMicrotask(() => (celebrate = true)); // re-arm the rising edge
     }

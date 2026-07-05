@@ -15,17 +15,16 @@ import LessonProgress from '../../../components/ui/LessonProgress.svelte';
 import SectionComplete from '../../../components/ui/SectionComplete.svelte';
 import PresentMode from '../../../components/ui/PresentMode.svelte';
 
-<PresentMode client:idle title="Árboles de Decisión y Random Forests" />
+<PresentMode client:load title="Árboles de Decisión y Random Forests" />
 
 <LessonProgress
-  client:load
-  title="Tu progreso en Árboles de Decisión"
+  title="En esta lección"
   sections={[
-    { id: 'dt-gini', label: 'Gini' },
-    { id: 'dt-duality', label: 'Partición' },
-    { id: 'dt-growing', label: 'Crecer' },
-    { id: 'dt-forest', label: 'Bosques' },
-    { id: 'dt-boosting', label: 'Boosting' },
+    { id: 'dt-gini', label: 'Gini', slug: 'impureza-de-gini' },
+    { id: 'dt-duality', label: 'Partición', slug: 'un-árbol-es-una-partición' },
+    { id: 'dt-growing', label: 'Crecer', slug: 'crecer-el-árbol' },
+    { id: 'dt-forest', label: 'Bosques', slug: 'bagging-y-random-forest' },
+    { id: 'dt-boosting', label: 'Boosting', slug: 'boosting' },
   ]}
 />
 
@@ -65,7 +64,7 @@ $$ \min_{\text{corte}} \; \sum_{v} \frac{|S_v|}{|S|}\,\text{Gini}(S_v) $$
 
 donde cada $S_v$ es un subconjunto resultante de la división y $\frac{|S_v|}{|S|}$ su peso. La **ganancia** de un corte es la diferencia entre la impureza del padre y esta impureza ponderada de los hijos.
 
-<SectionComplete client:visible id="dt-gini" label="✓ Gini" />
+<SectionComplete id="dt-gini" label="✓ Gini" />
 
 ## Un árbol es una partición
 
@@ -91,7 +90,7 @@ clf.fit(X_train, y_train)
 print("Precisión:", accuracy_score(y_test, clf.predict(X_test)))
 ```
 
-<SectionComplete client:visible id="dt-duality" label="✓ Partición" />
+<SectionComplete id="dt-duality" label="✓ Partición" />
 
 ## Crecer el árbol
 
@@ -115,7 +114,7 @@ Sin criterios de parada, un árbol crece hasta aislar cada punto en su propia ho
 
 **Ventajas** de los árboles: son fáciles de entender y visualizar, requieren poca preparación de datos (no necesitan normalización, toleran variables numéricas y categóricas), y sirven tanto para clasificación como para regresión. **Desventajas:** propensos al sobreajuste, varianza alta, dificultad para capturar relaciones lineales y sesgo hacia características con más niveles de división.
 
-<SectionComplete client:visible id="dt-growing" label="✓ Crecer" />
+<SectionComplete id="dt-growing" label="✓ Crecer" />
 
 ## Bagging y Random Forest
 
@@ -152,7 +151,7 @@ y_pred = rf.predict(X_test)
 `n_estimators` (número de árboles: más es mejor hasta saturar), `max_features` (cuántas características considerar por división; `'sqrt'` es un buen valor por defecto), y `max_depth` / `min_samples_leaf` para controlar cada árbol.
 </Aside>
 
-<SectionComplete client:visible id="dt-forest" label="✓ Bosques" />
+<SectionComplete id="dt-forest" label="✓ Bosques" />
 
 ## Importancia de variables
 
@@ -236,7 +235,7 @@ clf.fit(X_train, y_train)
 Para empezar, un **Random Forest** es robusto y casi no requiere ajuste. Si necesitas exprimir el máximo rendimiento, **XGBoost** o **LightGBM** suelen ganar, a cambio de afinar más parámetros. **CatBoost** brilla cuando hay muchas variables categóricas.
 </Aside>
 
-<SectionComplete client:visible id="dt-boosting" label="✓ Boosting" />
+<SectionComplete id="dt-boosting" label="✓ Boosting" />
 
 ## Resumen
 

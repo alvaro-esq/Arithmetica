@@ -11,18 +11,17 @@ import LessonProgress from '../../../components/ui/LessonProgress.svelte';
 import SectionComplete from '../../../components/ui/SectionComplete.svelte';
 import PresentMode from '../../../components/ui/PresentMode.svelte';
 
-<PresentMode client:idle title="Regularización y Optimización" />
+<PresentMode client:load title="Regularización y Optimización" />
 
 <LessonProgress
-  client:load
-  title="Tu progreso en Regularización y Optimización"
+  title="En esta lección"
   sections={[
-    { id: 'optim-init', label: 'Inicialización' },
-    { id: 'optim-activations', label: 'Activaciones' },
-    { id: 'optim-regularization', label: 'Regularización' },
-    { id: 'optim-optimizers', label: 'Optimización' },
-    { id: 'optim-batchnorm', label: 'Batch Norm' },
-    { id: 'optim-design', label: 'Diseño' },
+    { id: 'optim-init', label: 'Inicialización', slug: 'inicialización-de-pesos' },
+    { id: 'optim-activations', label: 'Activaciones', slug: 'funciones-de-activación' },
+    { id: 'optim-regularization', label: 'Regularización', slug: 'regularización' },
+    { id: 'optim-optimizers', label: 'Optimización', slug: 'optimización' },
+    { id: 'optim-batchnorm', label: 'Batch Norm', slug: 'batch-normalization' },
+    { id: 'optim-design', label: 'Diseño', slug: 'heurísticas-de-diseño' },
   ]}
 />
 
@@ -36,7 +35,7 @@ $$ W \sim U\!\left(-\sqrt{\tfrac{6}{n_{in}+n_{out}}},\ \sqrt{\tfrac{6}{n_{in}+n_
 
 La regla práctica empareja inicialización con activación: **sigmoid/tanh → Xavier**; **ReLU → He**. Xavier mantiene la varianza estable en activaciones simétricas; He compensa que ReLU anula la mitad de las entradas.
 
-<SectionComplete client:visible id="optim-init" label="✓ Inicialización" />
+<SectionComplete id="optim-init" label="✓ Inicialización" />
 
 ## Funciones de activación
 
@@ -56,7 +55,7 @@ Lo decisivo es la **derivada**. Donde se aplana a ≈0 (las colas de sigmoid y t
 ReLU es el valor por defecto en capas ocultas porque su gradiente no se desvanece para $z>0$. Si aparecen "neuronas muertas" (atascadas en $z<0$), Leaky ReLU las revive con una pendiente pequeña.
 </Aside>
 
-<SectionComplete client:visible id="optim-activations" label="✓ Activaciones" />
+<SectionComplete id="optim-activations" label="✓ Activaciones" />
 
 ## Regularización
 
@@ -78,7 +77,7 @@ La diferencia clave es **geométrica**: la restricción L1 es un **diamante** co
 L1 = diamante (esquinas en los ejes → ceros → selección de características). L2 = círculo (encogimiento suave). Elastic Net combina ambos.
 </Aside>
 
-<SectionComplete client:visible id="optim-regularization" label="✓ Regularización" />
+<SectionComplete id="optim-regularization" label="✓ Regularización" />
 
 ## Optimización
 
@@ -100,7 +99,7 @@ Corre los tres sobre el mismo valle: con la misma $\eta$, **SGD rebota** entre l
 
 ![Convergencia con RMSprop](/img/optim/rmsprop.png)
 
-<SectionComplete client:visible id="optim-optimizers" label="✓ Optimización" />
+<SectionComplete id="optim-optimizers" label="✓ Optimización" />
 
 ## Batch Normalization
 
@@ -114,7 +113,7 @@ Primero se centra y escala a media 0 / varianza 1 (con la estadística del lote)
 
 ![Normalización, luego escalado y desplazamiento](/img/optim/escalado-desplazamiento.png)
 
-<SectionComplete client:visible id="optim-batchnorm" label="✓ Batch Norm" />
+<SectionComplete id="optim-batchnorm" label="✓ Batch Norm" />
 
 ## Heurísticas de diseño
 
@@ -133,4 +132,4 @@ $$ \mathrm{softmax}(z)_i = \frac{e^{z_i}}{\sum_k e^{z_k}} $$
 Regularización + optimización no son detalles: deciden si una red entrena de forma estable y generaliza. Valida con validación cruzada, vigila la curva de pérdida y usa *early stopping*.
 </Aside>
 
-<SectionComplete client:visible id="optim-design" label="✓ Diseño" />
+<SectionComplete id="optim-design" label="✓ Diseño" />

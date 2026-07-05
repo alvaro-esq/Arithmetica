@@ -11,18 +11,17 @@ import LessonProgress from '../../../components/ui/LessonProgress.svelte';
 import SectionComplete from '../../../components/ui/SectionComplete.svelte';
 import PresentMode from '../../../components/ui/PresentMode.svelte';
 
-<PresentMode client:idle title="Detección de Anomalías" />
+<PresentMode client:load title="Detección de Anomalías" />
 
 <LessonProgress
-  client:load
-  title="Tu progreso en Detección de Anomalías"
+  title="En esta lección"
   sections={[
-    { id: 'anom-intro', label: 'Qué es' },
-    { id: 'anom-supervised', label: 'Métricas' },
-    { id: 'anom-resampling', label: 'Rebalanceo' },
-    { id: 'anom-lof', label: 'LOF' },
-    { id: 'anom-iforest', label: 'Isolation Forest' },
-    { id: 'anom-evaluation', label: 'Silueta' },
+    { id: 'anom-intro', label: 'Qué es', slug: 'qué-es-una-anomalía' },
+    { id: 'anom-supervised', label: 'Métricas', slug: 'clasificación-con-clases-desbalanceadas' },
+    { id: 'anom-resampling', label: 'Rebalanceo', slug: 'rebalanceo-undersampling-tomek-y-smote' },
+    { id: 'anom-lof', label: 'LOF', slug: 'detección-no-supervisada-local-outlier-factor' },
+    { id: 'anom-iforest', label: 'Isolation Forest', slug: 'isolation-forest' },
+    { id: 'anom-evaluation', label: 'Silueta', slug: 'evaluar-sin-etiquetas-coeficiente-de-silueta' },
   ]}
 />
 
@@ -39,7 +38,7 @@ El **umbral $\tau$ es el problema central**: demasiado bajo y dejamos pasar anom
 - **Supervisado:** tenemos etiquetas (sabemos qué fue anómalo). Es una clasificación binaria muy desbalanceada.
 - **No supervisado:** no hay etiquetas. Buscamos puntos en **regiones de baja densidad** o con estructura distinta a la masa de los datos.
 
-<SectionComplete client:visible id="anom-intro" label="✓ Qué es una anomalía" />
+<SectionComplete id="anom-intro" label="✓ Qué es una anomalía" />
 
 ## Clasificación con clases desbalanceadas
 
@@ -72,7 +71,7 @@ best_threshold = thresholds[np.argmax(f1_scores)]
 y_pred_optimal = (y_scores >= best_threshold).astype(int)
 ```
 
-<SectionComplete client:visible id="anom-supervised" label="✓ Métricas y umbral" />
+<SectionComplete id="anom-supervised" label="✓ Métricas y umbral" />
 
 ## Rebalanceo: undersampling, Tomek y SMOTE
 
@@ -103,7 +102,7 @@ X_res, y_res = SMOTE(random_state=42).fit_resample(X, y)
 X_res, y_res = TomekLinks().fit_resample(X_res, y_res)
 ```
 
-<SectionComplete client:visible id="anom-resampling" label="✓ Rebalanceo" />
+<SectionComplete id="anom-resampling" label="✓ Rebalanceo" />
 
 ## Detección no supervisada: Local Outlier Factor
 
@@ -133,7 +132,7 @@ labels = model.fit_predict(X)   # -1 = anomalía, 1 = normal
 scores = model.negative_outlier_factor_
 ```
 
-<SectionComplete client:visible id="anom-lof" label="✓ LOF" />
+<SectionComplete id="anom-lof" label="✓ LOF" />
 
 ## Isolation Forest
 
@@ -156,7 +155,7 @@ labels = model.predict(X)            # -1 = anomalía, 1 = normal
 scores = model.decision_function(X)  # menor = más anómalo
 ```
 
-<SectionComplete client:visible id="anom-iforest" label="✓ Isolation Forest" />
+<SectionComplete id="anom-iforest" label="✓ Isolation Forest" />
 
 ## Evaluar sin etiquetas: Coeficiente de Silueta
 
@@ -176,4 +175,4 @@ from sklearn.metrics import silhouette_score
 print("Silhouette promedio:", silhouette_score(X, labels))
 ```
 
-<SectionComplete client:visible id="anom-evaluation" label="✓ Silueta" />
+<SectionComplete id="anom-evaluation" label="✓ Silueta" />
