@@ -100,6 +100,24 @@
     transform: translateY(0.5px) scale(0.985);
   }
 
+  /* Hero "primary" CTA (e.g. "Empezar con Regresión Lineal"). Starlight paints it
+     `background: --sl-color-text-accent; color: --sl-color-black`; under our forced
+     light "paper" theme that is dark ink-blue behind dark text — unreadable. Pin
+     the full ink-blue-on-paper pairing every interactive control uses, so the
+     button is deterministic regardless of which scoped Starlight rule wins.
+     !important beats Starlight's equally-specific `.sl-link-button.primary`. */
+  a.sl-link-button.primary,
+  a.sl-link-button.primary:hover,
+  a.sl-link-button.primary:focus-visible {
+    background: var(--c-accent) !important;
+    border-color: var(--c-accent) !important;
+    color: var(--c-paper) !important;
+  }
+  a.sl-link-button.primary:hover {
+    background: var(--c-accent-soft, var(--c-accent)) !important;
+    border-color: var(--c-accent-soft, var(--c-accent)) !important;
+  }
+
   /* ====================================================================== */
   /* Presentation ("deck") mode — knowledge slides overlay                  */
   /* ====================================================================== */
