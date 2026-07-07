@@ -417,6 +417,23 @@
   }
 }
 
+/* ---- Landing splash: lift the hero above the fixed HeroCanvas background ----
+   HeroCanvas paints a fixed, pointer-events:none backdrop at z-index:0; the
+   splash content must sit above it and stay interactive. */
+.hero {
+  position: relative;
+  z-index: 1;
+}
+/* The splash body (lesson cards + feature grid) also rides above the backdrop. */
+.sl-markdown-content {
+  position: relative;
+  z-index: 1;
+}
+/* Docs pagination is meaningless on the landing splash — hide it. */
+.sl-container > footer .pagination-links {
+  display: none;
+}
+
 /* ---- Reduced motion: neutralize all animation/transition globally ---- */
 @media (prefers-reduced-motion: reduce) {
   *,
