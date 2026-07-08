@@ -24,6 +24,27 @@ export default defineConfig({
             href: "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css",
           },
         },
+        // Fraunces: display serif for the landing title and lesson H1s (editorial
+        // "living textbook" feel). Loaded via CDN, same pattern as KaTeX above.
+        {
+          tag: "link",
+          attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "preconnect",
+            href: "https://fonts.gstatic.com",
+            crossorigin: true,
+          },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "stylesheet",
+            href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&display=swap",
+          },
+        },
       ],
       customCss: ["./src/styles/global.css"],
       // Light-only: the site is "paper"-first (Ink & Copper) and only themes the

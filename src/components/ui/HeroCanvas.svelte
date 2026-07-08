@@ -14,15 +14,6 @@
     Array.from({ length: cols }, (_, c) => ({ x: gx(c), y: gy(r) }))
   ).flat();
 
-  // Nube de datos + recta tipo regresión (capa cercana), en la mitad derecha
-  // para no cruzar el título del hero.
-  const cloud = [
-    [0.46, 0.86], [0.53, 0.74], [0.58, 0.80], [0.64, 0.66],
-    [0.70, 0.70], [0.76, 0.56], [0.82, 0.60], [0.88, 0.46],
-    [0.93, 0.50], [0.97, 0.36]
-  ].map(([px, py]) => ({ x: px * W, y: py * H }));
-  const fit = { x1: 0.44 * W, y1: 0.90 * H, x2: 0.99 * W, y2: 0.34 * H };
-
   let root: HTMLDivElement;
 
   $effect(() => {
@@ -65,15 +56,6 @@
         <circle cx={d.x} cy={d.y} r="1.6" fill={INK} opacity="0.07" />
       {/each}
     </g>
-    <g class="layer near">
-      <line
-        x1={fit.x1} y1={fit.y1} x2={fit.x2} y2={fit.y2}
-        stroke={ACCENT} stroke-width="2.5" opacity="0.30" stroke-linecap="round"
-      />
-      {#each cloud as p}
-        <circle cx={p.x} cy={p.y} r="6" fill={INK} opacity="0.14" />
-      {/each}
-    </g>
   </svg>
 </div>
 
@@ -114,9 +96,6 @@
   }
   .far {
     transform: translate3d(calc(var(--px) * 10px), calc(var(--py) * 8px), 0);
-  }
-  .near {
-    transform: translate3d(calc(var(--px) * -22px), calc(var(--py) * -16px), 0);
   }
 
   @media (prefers-reduced-motion: reduce) {

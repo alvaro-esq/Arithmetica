@@ -111,13 +111,21 @@ Arrastra el punto inicial y ajusta $\eta$. Demasiado **alto** y el descenso osci
 
 ¿Cómo obtenemos $\partial C/\partial w$ para *cada* peso de una red profunda? Con **retropropagación**: aplicando la regla de la cadena hacia atrás, capa por capa. Definiendo el error de una neurona como $\delta^l_j = \partial C / \partial z^l_j$, todo se resume en **cuatro ecuaciones**:
 
-$$ \delta^L = \nabla_a C \odot \sigma'(z^L) \tag{BP1} $$
+$$
+\delta^L = \nabla_a C \odot \sigma'(z^L) \tag{BP1}
+$$
 
-$$ \delta^l = \big((w^{l+1})^{\top}\,\delta^{l+1}\big) \odot \sigma'(z^l) \tag{BP2} $$
+$$
+\delta^l = \big((w^{l+1})^{\top}\,\delta^{l+1}\big) \odot \sigma'(z^l) \tag{BP2}
+$$
 
-$$ \frac{\partial C}{\partial b^l_j} = \delta^l_j \tag{BP3} $$
+$$
+\frac{\partial C}{\partial b^l_j} = \delta^l_j \tag{BP3}
+$$
 
-$$ \frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k\,\delta^l_j \tag{BP4} $$
+$$
+\frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k\,\delta^l_j \tag{BP4}
+$$
 
 (BP1) mide el error en la salida; (BP2) lo **propaga hacia atrás** por los pesos; (BP3) y (BP4) convierten ese error en los gradientes que actualizan sesgos y pesos.
 
