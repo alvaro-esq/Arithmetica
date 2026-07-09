@@ -2,7 +2,7 @@
 
 ### Interactive Statistical Learning Platform
 
-**Arithmetica** es una plataforma educativa de código abierto diseñada para la enseñanza de **Statistical Learning**, **Machine Learning** y **Deep Learning** a nivel de posgrado.
+**Arithmetica** es una plataforma educativa de código abierto diseñada para la enseñanza de **Statistical Learning**, **Machine Learning**, **Deep Learning** y **fundamentos de LLM y agentes de IA** a nivel de posgrado.
 
 A diferencia de los libros de texto estáticos o los dashboards complejos, Arithmetica funciona como un **"Libro de Texto Vivo"**: combina la rigurosidad académica y la tipografía cuidada con visualizaciones interactivas de alto rendimiento que permiten al estudiante "tocar" las matemáticas.
 
@@ -76,38 +76,29 @@ El sitio estará disponible en `http://localhost:4321`.
 
 ```text
 src/
-├── components/          # Componentes Interactivos (Svelte)
-│   ├── InteractiveRegression.svelte
-│   └── svm/             # Visualizaciones del tema SVM
-│       ├── MaxMarginHyperplane.svelte
-│       ├── SoftMarginSlack.svelte
-│       ├── KernelTrickLift.svelte
-│       ├── KernelPlayground.svelte
-│       └── KernelFunctionPlot.svelte
-├── lib/
-│   └── svm/             # Lógica matemática compartida (TS puro, testeable)
-│       ├── prng.ts          # PRNG sembrado (mulberry32) + Box–Muller
-│       ├── datasets.ts      # blobs / circles / moons / interval1d
-│       ├── kernels.ts       # los 4 kernels + decisionFunction
-│       ├── geometry.ts      # lineSegment, signedDistance, clientToData…
-│       ├── solvers.ts       # Pegasos (lineal) + SMO simplificado (kernel)
-│       ├── drag.ts          # acción Svelte `draggablePoints` (reutilizable)
-│       └── colors.ts        # tokens de color del tema
+├── components/          # Componentes interactivos (Svelte), un directorio por tema
+│   ├── svm/ dt/ dl/ …   #   visualizaciones de cada lección de ML / DL
+│   ├── llm/             #   19 islas del curso "Fundamentos de LLM y Agentes de IA"
+│   └── ui/              #   primitivas UX (LessonCard, Celebrate, PresentMode…)
+├── lib/                 # Lógica matemática/pedagógica (TS puro, determinista)
+│   ├── svm/             #   el patrón original: prng sembrado (mulberry32),
+│   │                    #   datasets, kernels, solvers, drag.ts y colors.ts
+│   ├── dt/ dl/ rl/ …    #   motores por tema (CART, backprop, value iteration…)
+│   └── llm/             #   tokenizador BPE educativo, softmax con temperature,
+│                        #   matrices de atención, agente scripted, costos
 ├── content/
 │   └── docs/            # Páginas del libro (MDX)
-│       ├── index.mdx
-│       └── ml/
-│           ├── linear-regression.mdx
-│           └── svm.mdx
+│       ├── ml/          #   lecciones de Statistical Learning / ML / DL
+│       └── llm/         #   curso de LLM y agentes de IA (5 lecciones)
 └── styles/              # CSS global (Tailwind directives)
 
 ```
 
-> **Patrón clave:** toda la matemática vive en `src/lib/svm/` (TypeScript puro,
-> determinista y verificable por separado) y los componentes `.svelte` solo
-> hacen render SVG + reactividad. Esto mantiene los componentes pequeños y
-> permite que varias visualizaciones reusen los mismos solvers, kernels y la
-> acción de arrastre.
+> **Patrón clave:** toda la matemática vive en `src/lib/<tema>/` (TypeScript
+> puro, determinista y verificable por separado — el tema SVM estableció el
+> patrón) y los componentes `.svelte` solo hacen render SVG + reactividad.
+> Esto mantiene los componentes pequeños y permite que varias visualizaciones
+> reusen los mismos solvers, la acción de arrastre y los tokens de color.
 
 ---
 

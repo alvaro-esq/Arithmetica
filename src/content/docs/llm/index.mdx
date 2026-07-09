@@ -1,0 +1,45 @@
+---
+title: Fundamentos de LLM y Agentes de IA
+description: Curso introductorio de IA generativa para Business Intelligence — de ChatGPT y los transformers a las APIs, las herramientas y los agentes, con visualizaciones interactivas.
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Un módulo introductorio de **IA generativa para Business Intelligence**: qué es un
+LLM, cómo cobra y "recuerda", cómo hablarle bien, cuándo desconfiar de él y cómo
+se convierte en un agente que trabaja con tus datos. Sin matemáticas pesadas —
+cada concepto se **toca**: tokeniza tu propio texto, muestrea la siguiente
+palabra, quema (o salva) un presupuesto de tokens y aprueba o rechaza las
+acciones de un agente.
+
+<CardGrid>
+  <LinkCard
+    title="1 · ¿Qué es un LLM?"
+    description="ChatGPT vs GPT vs LLM, la atención de los transformers y la generación token a token — genera tú la frase."
+    href="/llm/que-es-un-llm/"
+  />
+  <LinkCard
+    title="2 · Tokens, costos y contexto"
+    description="Tokeniza texto en vivo, apuesta cuántos tokens pesa, compara costos de dos diseños y mira a la ventana de contexto olvidar."
+    href="/llm/tokens-costos-y-contexto/"
+  />
+  <LinkCard
+    title="3 · Prompts, roles y temperature"
+    description="Enciende los ingredientes de un prompt fuerte, arma el JSON de una conversación por roles y juega con el dial de la aleatoriedad."
+    href="/llm/prompts-roles-y-temperature/"
+  />
+  <LinkCard
+    title="4 · Alucinaciones y ecosistema"
+    description="La misma pregunta con y sin datos, el triage de verificación para BI y el mapa de modelos y proveedores."
+    href="/llm/alucinaciones-y-ecosistema/"
+  />
+  <LinkCard
+    title="5 · APIs, herramientas y agentes"
+    description="La llamada HTTP por dentro, function calling paso a paso y un agente que se detiene a pedir TU aprobación."
+    href="/llm/apis-y-agentes/"
+  />
+</CardGrid>
+
+**Orden recomendado:** las lecciones se apoyan una en otra (la generación explica
+la temperature; los tokens explican el costo; las alucinaciones motivan el
+function calling), así que conviene recorrerlas en secuencia la primera vez.

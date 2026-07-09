@@ -1,0 +1,114 @@
+---
+title: Prompts, roles y temperature
+description: Los ingredientes de una buena instrucción, cómo se organizan los mensajes por roles en una API (system, user, assistant, tool) y qué controla realmente el parámetro temperature.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import PromptBuilder from '../../../components/llm/PromptBuilder.svelte';
+import RolesSimulator from '../../../components/llm/RolesSimulator.svelte';
+import TemperatureLab from '../../../components/llm/TemperatureLab.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="Prompts, roles y temperature" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'llm3-prompt', label: 'Anatomía del prompt', slug: 'anatomía-de-un-prompt-fuerte' },
+    { id: 'llm3-roles', label: 'Roles', slug: 'roles-quién-dice-qué' },
+    { id: 'llm3-temp', label: 'Temperature', slug: 'temperature-el-dial-de-la-aleatoriedad' },
+    { id: 'llm3-recetas', label: 'Recetas', slug: 'recetas-de-prompts-para-bi' },
+  ]}
+/>
+
+Ya sabes qué es un LLM y cuánto cuesta hablarle. Esta lección es sobre **cómo hablarle bien**: qué hace fuerte a una instrucción, cómo se estructura una conversación en una API y qué perilla controla la variabilidad de las respuestas.
+
+## Anatomía de un prompt fuerte
+
+*"Resume las ventas"* es un prompt débil — no por corto, sino porque deja al modelo **adivinando** el período, la audiencia, el formato y (lo más peligroso) si puede inventar causas. Un buen prompt no es una frase mágica: es una instrucción con ingredientes concretos. Enciéndelos uno a uno:
+
+<PromptBuilder client:visible />
+
+Prueba este experimento: activa todo **menos Datos y Restricciones** y mira la respuesta — fluida, segura… y con un 9% inventado. Enciende ahora **Restricciones** (el modelo al menos confiesa que está suponiendo) y luego **Datos** (por fin cita cifras reales). La lección: los ingredientes no valen lo mismo. **Datos** y **Restricciones** son los que separan una respuesta plausible de una confiable; el resto afina utilidad y forma.
+
+<Aside type="note">
+Un buen prompt <strong>mejora la probabilidad</strong> de una buena respuesta; no la garantiza ni reemplaza la validación. El prompt guía — la verificación (lección 4) decide si el resultado se usa.
+</Aside>
+
+<SectionComplete id="llm3-prompt" label="✓ Anatomía del prompt" />
+
+## Roles: quién dice qué
+
+Cuando usas una API, la conversación no es un texto suelto: es una **lista de mensajes con roles**. Cada rol tiene un trabajo distinto — y separar quién dice qué es lo que permite construir aplicaciones controladas:
+
+- **system** — las reglas permanentes de quien construye la aplicación (tono, restricciones, políticas). El usuario final nunca las ve.
+- **user** — la solicitud del usuario en cada turno.
+- **assistant** — lo que el modelo respondió antes (se reenvía como memoria del hilo).
+- **tool** — el resultado de una herramienta externa: una consulta SQL, una API, una función.
+
+Arma la conversación y alterna entre la vista de chat y el JSON real:
+
+<RolesSimulator client:visible />
+
+¿Por qué importa? Porque en una aplicación seria **no dependes de lo que escriba el usuario**. Si el system dice *"nunca afirmes una causa sin datos que la respalden"*, la pregunta *"¿por qué cayó la venta en tiendas físicas?"* recibe una respuesta honesta — *"la tabla muestra la caída de 6%, pero no incluye información para explicar la causa"* — sin importar cómo pregunte el usuario.
+
+<SectionComplete id="llm3-roles" label="✓ Roles" />
+
+## Temperature: el dial de la aleatoriedad
+
+Recuerda la lección 1: el modelo elige cada token desde una **distribución de probabilidad**. La **temperature** re-forma esa distribución antes de muestrear. No mide inteligencia ni exactitud — controla **cuánta variedad** permites:
+
+<TemperatureLab client:visible />
+
+Mueve el dial a `0.1` y muestrea 50 veces: sale casi siempre lo mismo (una torre). Súbelo a `1.5`: el histograma se reparte. Eso es todo lo que hace — y es exactamente lo que necesitas decidir por tarea: un reporte financiero quiere consistencia; una lluvia de ideas quiere sorpresa.
+
+<Aside type="caution">
+Bajar la temperature <strong>no garantiza verdad</strong>. Hace al modelo más consistente — si el contexto está mal o faltan datos, será <em>consistentemente incorrecto</em>. La exactitud viene de los datos, no del dial.
+</Aside>
+
+<SectionComplete id="llm3-temp" label="✓ Temperature" />
+
+## Recetas de prompts para BI
+
+Cuatro plantillas listas para adaptar. Nota cómo cada una usa los ingredientes de esta lección:
+
+**Resumen ejecutivo con fuente controlada:**
+
+```text
+Actúa como analista de Business Intelligence. Con base únicamente en la tabla
+proporcionada, resume el desempeño de ventas de junio para un gerente comercial.
+Incluye: variación total, región con mayor crecimiento, región con mayor caída
+y una recomendación. Si la tabla no permite explicar las causas, indícalo.
+```
+
+**Salida en formato integrable:**
+
+```text
+Devuelve la respuesta en una tabla con cuatro columnas: hallazgo, evidencia,
+impacto de negocio y acción recomendada. Usa máximo cinco filas.
+```
+
+**Control de incertidumbre:**
+
+```text
+Si no hay datos suficientes para concluir algo, escribe "No hay evidencia
+suficiente" y explica qué dato haría falta.
+```
+
+**Separar hechos de hipótesis:**
+
+```text
+Distingue entre hechos confirmados, inferencias razonables y datos faltantes.
+No afirmes causas si la tabla no las respalda.
+```
+
+<SectionComplete id="llm3-recetas" label="✓ Recetas" />
+
+## Resumen
+
+- Un prompt fuerte define **rol, contexto, datos, audiencia, formato y restricciones** — datos y restricciones son los que evitan inventos.
+- Una conversación de API es una **lista de mensajes con roles**; el system establece reglas que el usuario no puede saltarse.
+- **Temperature** redistribuye probabilidad: baja = consistencia (reportes, SQL), alta = variedad (ideación). Nunca compra verdad.
+- Las plantillas se adaptan; el hábito que no se negocia es **pedir que declare sus límites**.

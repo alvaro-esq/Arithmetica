@@ -84,6 +84,18 @@ export default defineConfig({
             { label: "Introducción a Reinforcement Learning", link: "ml/reinforcement-learning/" },
           ],
         },
+        {
+          label: "Fundamentos de LLM y Agentes de IA",
+          collapsed: false,
+          items: [
+            { label: "El curso de IA", link: "llm/" },
+            { label: "¿Qué es un LLM?", link: "llm/que-es-un-llm/" },
+            { label: "Tokens, costos y contexto", link: "llm/tokens-costos-y-contexto/" },
+            { label: "Prompts, roles y temperature", link: "llm/prompts-roles-y-temperature/" },
+            { label: "Alucinaciones y ecosistema", link: "llm/alucinaciones-y-ecosistema/" },
+            { label: "APIs, herramientas y agentes", link: "llm/apis-y-agentes/" },
+          ],
+        },
       ],
     }),
     svelte(),
