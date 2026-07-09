@@ -1,0 +1,104 @@
+---
+title: "El harness: la maquinaria alrededor del modelo"
+description: Qué es un harness y por qué el modelo es solo el motor — lo que se re-envía en cada turno, MCP, los agentes de código (Claude Code, Codex, OpenCode) y el prompt injection.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import HarnessAnatomy from '../../../components/llm/HarnessAnatomy.svelte';
+import TurnAssembly from '../../../components/llm/TurnAssembly.svelte';
+import McpConnector from '../../../components/llm/McpConnector.svelte';
+import CodingAgentSession from '../../../components/llm/CodingAgentSession.svelte';
+import CodingAgentCompare from '../../../components/llm/CodingAgentCompare.svelte';
+import PromptInjectionDemo from '../../../components/llm/PromptInjectionDemo.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="El harness" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'llm6-harness', label: 'El harness', slug: 'qué-es-un-harness' },
+    { id: 'llm6-turnos', label: 'Cada turno', slug: 'lo-que-el-modelo-ve-en-cada-turno' },
+    { id: 'llm6-mcp', label: 'MCP', slug: 'mcp-el-conector-estándar' },
+    { id: 'llm6-coding', label: 'Agentes de código', slug: 'agentes-de-código-claude-code-codex-y-opencode' },
+    { id: 'llm6-injection', label: 'Prompt injection', slug: 'prompt-injection-cuando-los-datos-atacan' },
+    { id: 'llm6-bi', label: 'Para BI', slug: 'qué-significa-para-bi' },
+  ]}
+/>
+
+En la lección 1 aprendiste que ChatGPT no es GPT: la aplicación no es el modelo. Esta lección le pone nombre a esa diferencia. Todo lo que envuelve al modelo — el system prompt, las herramientas, la memoria, los permisos, el loop — se llama **harness** (arnés). El modelo es el motor; el harness es el resto del vehículo. Y explica por qué dos productos con el *mismo* modelo se comportan tan distinto.
+
+## ¿Qué es un harness?
+
+El experimento: la misma petición, con el modelo desnudo y con cada capa del harness encendida. Activa los anillos uno por uno y mira la respuesta:
+
+<HarnessAnatomy client:visible />
+
+Fíjate en el orden de importancia: sin **herramientas**, el modelo solo puede *hablar* (y si tampoco tiene system prompt, habla inventando). Con herramientas pero sin **permisos**, actúa sin control. El harness completo es lo que convierte "texto plausible" en "tarea cumplida y verificada" — exactamente la diferencia entre el chatbot de la lección 1 y el agente de la lección 5.
+
+<SectionComplete id="llm6-harness" label="✓ El harness" />
+
+## Lo que el modelo ve en cada turno
+
+El secreto peor contado de los agentes: el modelo **no tiene memoria entre llamadas**. Lo que parece una conversación continua es el harness re-armando y re-enviando TODO — system prompt, historial completo, resultados de herramientas — en **cada turno**. Muévete por la sesión y mira el request real:
+
+<TurnAssembly client:visible />
+
+Dos consecuencias directas para tu presupuesto de BI: la entrada crece turno a turno (la tabla de 390 tokens del turno 3 se paga otra vez en el 4 y en el 5), y por eso una sesión larga de agente cuesta mucho más que la suma de sus preguntas. Es la ventana de contexto de la lección 2, vista desde la factura.
+
+<Aside type="tip">
+Por esto los harnesses serios traen trucos de ingeniería: *caché* de la parte estable del prompt, resúmenes del historial viejo, herramientas que devuelven solo lo necesario. Diseñar agentes baratos = diseñar qué NO se re-envía.
+</Aside>
+
+<SectionComplete id="llm6-turnos" label="✓ Cada turno" />
+
+## MCP: el conector estándar
+
+Si cada app con IA tuviera que integrar a mano cada sistema de datos, el mundo sería el panel izquierdo. **MCP** (*Model Context Protocol*) es el estándar que lo resuelve: cada herramienta se publica una vez y cualquier harness compatible la puede usar. Alterna:
+
+<McpConnector client:visible />
+
+La analogía es USB-C: antes cada teléfono tenía su cargador; hoy un solo puerto conecta cualquier accesorio. Para BI significa que tu base de ventas, tu CRM o tu hoja de metas se conectan **una vez** — y las usan Claude Code, el chat interno y el dashboard por igual.
+
+<SectionComplete id="llm6-mcp" label="✓ MCP" />
+
+## Agentes de código: Claude Code, Codex y OpenCode
+
+Los harnesses más avanzados hoy son los **agentes de código**: la terminal, los archivos y git como herramientas. Mira uno trabajar — el mismo loop de la lección 5, con sabor a consola:
+
+<CodingAgentSession client:visible />
+
+¿Reconociste el patrón? Plan → herramienta → observación → verificación → **pausa ante la acción sensible**. El error de "totales inflados por devoluciones" es un caso real de BI, y el agente no declara éxito hasta comparar contra el dashboard. Los tres nombres que debes conocer:
+
+<CodingAgentCompare client:visible />
+
+<Aside type="note" title="Esto cambia cada 6 meses">
+Los nombres, precios y capacidades de esta tabla van a envejecer rápido. Lo que permanece: **harness ≠ modelo**, y los criterios de la lista — permisos, dónde corre, abierto/cerrado, costo por sesión, calidad del loop de verificación.
+</Aside>
+
+<SectionComplete id="llm6-coding" label="✓ Agentes de código" />
+
+## Prompt injection: cuando los datos atacan
+
+Un agente con herramientas lee datos que **otros escribieron**: comentarios de clientes, correos, filas de una tabla. ¿Y si alguien esconde instrucciones ahí? Ejecuta el agente sin defensas y descúbrelo — luego activa defensas de una en una:
+
+<PromptInjectionDemo client:visible />
+
+Esto se llama **prompt injection** y es el riesgo de seguridad número uno de los agentes: el modelo no siempre distingue entre "texto que debo resumir" y "orden que debo obedecer". No hay una defensa perfecta — por eso se usan en capas: separar datos de instrucciones, dar permisos mínimos y dejar la aprobación humana como última red. Te sonará: son las mismas tres cosas que hacen bueno al agente de la lección 5.
+
+<SectionComplete id="llm6-injection" label="✓ Prompt injection" />
+
+## Qué significa para BI
+
+El analista que usa agentes de código no escribe menos SQL porque sabe menos — escribe menos porque su trabajo se movió un nivel arriba: **especificar bien el problema, revisar el diff y aprobar (o no) el cambio**. Las habilidades de esta lección son exactamente esas:
+
+1. Saber qué hay en el harness (qué herramientas, qué permisos) antes de confiarle una tarea.
+2. Presupuestar sesiones, no preguntas: cada turno re-envía todo.
+3. Conectar los datos una vez, vía estándar (MCP), en lugar de integración artesanal por app.
+4. Tratar todo dato externo como potencialmente hostil: defensas en capas, siempre.
+
+La próxima lección ataca la otra mitad del problema: cómo hacer que el modelo trabaje **con tus datos** — RAG, embeddings y el copiloto Text-to-SQL.
+
+<SectionComplete id="llm6-bi" label="✓ Para BI" />

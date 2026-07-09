@@ -78,18 +78,18 @@ El sitio estará disponible en `http://localhost:4321`.
 src/
 ├── components/          # Componentes interactivos (Svelte), un directorio por tema
 │   ├── svm/ dt/ dl/ …   #   visualizaciones de cada lección de ML / DL
-│   ├── llm/             #   19 islas del curso "Fundamentos de LLM y Agentes de IA"
+│   ├── llm/             #   29 islas del curso "Fundamentos de LLM y Agentes de IA"
 │   └── ui/              #   primitivas UX (LessonCard, Celebrate, PresentMode…)
 ├── lib/                 # Lógica matemática/pedagógica (TS puro, determinista)
 │   ├── svm/             #   el patrón original: prng sembrado (mulberry32),
 │   │                    #   datasets, kernels, solvers, drag.ts y colors.ts
 │   ├── dt/ dl/ rl/ …    #   motores por tema (CART, backprop, value iteration…)
 │   └── llm/             #   tokenizador BPE educativo, softmax con temperature,
-│                        #   matrices de atención, agente scripted, costos
+│                        #   atención, agentes scripted, harness, RAG, embeddings 2D
 ├── content/
 │   └── docs/            # Páginas del libro (MDX)
 │       ├── ml/          #   lecciones de Statistical Learning / ML / DL
-│       └── llm/         #   curso de LLM y agentes de IA (5 lecciones)
+│       └── llm/         #   curso de LLM y agentes de IA (7 lecciones)
 └── styles/              # CSS global (Tailwind directives)
 
 ```
