@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Arithmetica is an interactive educational platform ("living textbook") for teaching Statistical Learning / ML / Deep Learning, plus an LLM-and-AI-agents fundamentals course (`src/content/docs/llm/`, all content in Spanish with BI-flavored examples). It is an **Astro + Starlight** static site where each lesson is an MDX page that embeds **Svelte** components for live mathematical visualizations. There is no backend, database, or auth — everything renders statically and only interactive components hydrate in the browser (Islands Architecture).
+Arithmetica is an interactive educational platform ("living textbook") for teaching Statistical Learning / ML / Deep Learning, plus a Linear Algebra course (`src/content/docs/algebra-lineal/`, islands in `src/components/la/`, math in `src/lib/la/`) and an LLM-and-AI-agents fundamentals course (`src/content/docs/llm/`) — all content in Spanish with BI-flavored examples. It is an **Astro + Starlight** static site where each lesson is an MDX page that embeds **Svelte** components for live mathematical visualizations. There is no backend, database, or auth — everything renders statically and only interactive components hydrate in the browser (Islands Architecture).
 
 ## Commands
 

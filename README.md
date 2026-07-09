@@ -2,7 +2,7 @@
 
 ### Interactive Statistical Learning Platform
 
-**Arithmetica** es una plataforma educativa de código abierto diseñada para la enseñanza de **Statistical Learning**, **Machine Learning**, **Deep Learning** y **fundamentos de LLM y agentes de IA** a nivel de posgrado.
+**Arithmetica** es una plataforma educativa de código abierto diseñada para la enseñanza de **Álgebra Lineal**, **Statistical Learning**, **Machine Learning**, **Deep Learning** y **fundamentos de LLM y agentes de IA** a nivel de posgrado.
 
 A diferencia de los libros de texto estáticos o los dashboards complejos, Arithmetica funciona como un **"Libro de Texto Vivo"**: combina la rigurosidad académica y la tipografía cuidada con visualizaciones interactivas de alto rendimiento que permiten al estudiante "tocar" las matemáticas.
 
@@ -78,16 +78,19 @@ El sitio estará disponible en `http://localhost:4321`.
 src/
 ├── components/          # Componentes interactivos (Svelte), un directorio por tema
 │   ├── svm/ dt/ dl/ …   #   visualizaciones de cada lección de ML / DL
+│   ├── la/              #   15 islas del curso "Álgebra Lineal"
 │   ├── llm/             #   29 islas del curso "Fundamentos de LLM y Agentes de IA"
 │   └── ui/              #   primitivas UX (LessonCard, Celebrate, PresentMode…)
 ├── lib/                 # Lógica matemática/pedagógica (TS puro, determinista)
 │   ├── svm/             #   el patrón original: prng sembrado (mulberry32),
 │   │                    #   datasets, kernels, solvers, drag.ts y colors.ts
 │   ├── dt/ dl/ rl/ …    #   motores por tema (CART, backprop, value iteration…)
+│   ├── la/              #   SVD (Jacobi), eigen 2×2 cerrado, PageRank, embeddings
 │   └── llm/             #   tokenizador BPE educativo, softmax con temperature,
 │                        #   atención, agentes scripted, harness, RAG, embeddings 2D
 ├── content/
 │   └── docs/            # Páginas del libro (MDX)
+│       ├── algebra-lineal/  # curso de Álgebra Lineal (5 lecciones)
 │       ├── ml/          #   lecciones de Statistical Learning / ML / DL
 │       └── llm/         #   curso de LLM y agentes de IA (7 lecciones)
 └── styles/              # CSS global (Tailwind directives)
