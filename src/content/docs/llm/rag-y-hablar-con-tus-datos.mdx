@@ -1,0 +1,93 @@
+---
+title: "Habla con tus datos: RAG y Text-to-SQL"
+description: Cómo darle TUS datos al modelo — embeddings y búsqueda semántica, el pipeline RAG que responde citando fuentes, el copiloto Text-to-SQL y cuándo elegir prompting, RAG o fine-tuning.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import EmbeddingMap from '../../../components/llm/EmbeddingMap.svelte';
+import RagPipeline from '../../../components/llm/RagPipeline.svelte';
+import TextToSqlLab from '../../../components/llm/TextToSqlLab.svelte';
+import StrategyPicker from '../../../components/llm/StrategyPicker.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="RAG y Text-to-SQL" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'llm7-embeddings', label: 'Embeddings', slug: 'embeddings-el-significado-como-distancia' },
+    { id: 'llm7-rag', label: 'RAG', slug: 'el-pipeline-rag' },
+    { id: 'llm7-sql', label: 'Text-to-SQL', slug: 'text-to-sql-el-copiloto-de-bi' },
+    { id: 'llm7-estrategia', label: 'La decisión', slug: 'prompting-rag-o-fine-tuning' },
+    { id: 'llm7-cierre', label: 'Mensajes clave', slug: 'mensajes-clave' },
+  ]}
+/>
+
+La lección 2 dejó una tensión sin resolver: la ventana de contexto es finita y tus datos no caben en ella. ¿Entonces cómo hace una empresa para que el modelo responda sobre **sus** ventas, **sus** políticas, **su** esquema? Esta lección es la respuesta — y es la arquitectura detrás de casi todo "chat con tus datos" que existe.
+
+## Embeddings: el significado como distancia
+
+Antes de buscar hay que poder **comparar significados**, no palabras. Un *embedding* convierte cada texto en un punto de un espacio donde "parecido" significa "cerca" — aunque no compartan ni una palabra. Escribe una consulta y mira dónde cae:
+
+<EmbeddingMap client:visible />
+
+Fíjate que "¿cómo van las ventas?" encuentra "ingresos del mes pasado" sin que compartan palabras: la cercanía es de **significado**. Eso es lo que un `LIKE '%ventas%'` de SQL jamás va a hacer. Y cuando ninguna palabra existe en el vocabulario, el demo lo confiesa — los embeddings reales, con cientos de dimensiones y vocabularios completos, no tienen ese problema.
+
+<SectionComplete id="llm7-embeddings" label="✓ Embeddings" />
+
+## El pipeline RAG
+
+**RAG** — *Retrieval-Augmented Generation*, generación aumentada con recuperación — junta las piezas: la pregunta se embebe, se buscan los fragmentos más cercanos en tu base de conocimiento, se inyectan al contexto y el modelo responde **citando**. Recorre las 4 etapas (y no te saltes el caso 3):
+
+<RagPipeline client:visible />
+
+¿Lo reconoces? RAG es el "**Con datos**" de la lección 4, automatizado: en vez de pegar la tabla a mano, un buscador la encuentra por ti. Y el caso 3 es la prueba de honestidad del sistema: cuando el dato no está en los documentos, la respuesta correcta es decirlo — no rellenar el hueco con un invento plausible.
+
+<Aside type="tip">
+La calidad de un RAG depende menos del modelo que de la **base de conocimiento**: fragmentos bien cortados, fuentes actualizadas, metadatos limpios. Es trabajo de gestión de datos — o sea, trabajo de BI.
+</Aside>
+
+<SectionComplete id="llm7-rag" label="✓ RAG" />
+
+## Text-to-SQL: el copiloto de BI
+
+La aplicación estrella en BI: preguntas en español, el modelo escribe el SQL contra tu esquema. Pero esta sección tiene una regla: **tú votas si el SQL está bien antes de ver el veredicto**. Los tres casos:
+
+<TextToSqlLab client:visible />
+
+La moraleja del caso 2 vale la lección entera: un SQL que ejecuta sin errores y devuelve filas razonables **puede seguir estando mal**. La falla no era de sintaxis sino de *negocio* — olvidar las devoluciones — y solo la detecta alguien que conoce los datos. El copiloto escribe; el analista aprueba. Exactamente el mismo contrato que con el agente de código de la lección 6.
+
+<SectionComplete id="llm7-sql" label="✓ Text-to-SQL" />
+
+## ¿Prompting, RAG o fine-tuning?
+
+"Quiero que el modelo sepa X" tiene tres soluciones con costos muy distintos. La pregunta de entrevista favorita — y la decisión de arquitectura que te va a tocar tomar. Responde el árbol con tu caso en mente:
+
+<StrategyPicker client:visible />
+
+El resumen para la pared:
+
+| Estrategia | Qué cambia | Cuándo | Costo |
+| --- | --- | --- | --- |
+| **Prompting** | El contexto de cada llamada | La información cabe en la ventana | Mínimo — empieza siempre aquí |
+| **RAG** | Lo que se busca e inyecta | Datos que cambian o que exigen cita | Medio — mantener la base de conocimiento |
+| **Fine-tuning** | Los pesos del modelo | Estilo/formato muy específico, en volumen | Alto — y se repite con cada modelo nuevo |
+
+<SectionComplete id="llm7-estrategia" label="✓ La decisión" />
+
+## Mensajes clave
+
+Los cierres de las lecciones 6 y 7 — la capa que faltaba sobre los diez mensajes del bloque anterior:
+
+1. El **harness** es distinto del modelo: mismo motor, producto diferente. Evalúa herramientas, permisos y loop — no solo el nombre del modelo.
+2. El modelo **no tiene memoria entre llamadas**: cada turno re-envía todo. Presupuesta sesiones, no preguntas.
+3. Los **agentes de código** (Claude Code, Codex, OpenCode) son el harness más maduro: el analista pasa de escribir a **especificar, revisar y aprobar**.
+4. Los datos también atacan: **prompt injection** se mitiga en capas — separar datos de instrucciones, permisos mínimos, aprobación humana.
+5. **Embeddings**: significado = posición, parecido = distancia. Es la base de toda búsqueda semántica.
+6. **RAG** = el antídoto contra alucinaciones, industrializado: recupera, inyecta, responde **citando** — y confiesa cuando el dato no está.
+7. El SQL generado se **revisa contra el negocio**, no contra la sintaxis: ejecutar sin errores no es estar correcto.
+8. La escalera de decisión: **prompting primero, RAG cuando los datos crecen o cambian, fine-tuning solo para comportamiento** — y casi nunca es el primer paso.
+
+<SectionComplete id="llm7-cierre" label="✓ Mensajes clave" />

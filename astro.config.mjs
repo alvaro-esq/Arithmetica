@@ -94,6 +94,8 @@ export default defineConfig({
             { label: "Prompts, roles y temperature", link: "llm/prompts-roles-y-temperature/" },
             { label: "Alucinaciones y ecosistema", link: "llm/alucinaciones-y-ecosistema/" },
             { label: "APIs, herramientas y agentes", link: "llm/apis-y-agentes/" },
+            { label: "El harness y los agentes de código", link: "llm/harness-y-agentes-de-codigo/" },
+            { label: "RAG y Text-to-SQL", link: "llm/rag-y-hablar-con-tus-datos/" },
           ],
         },
       ],
