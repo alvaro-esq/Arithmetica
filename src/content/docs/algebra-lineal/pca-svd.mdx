@@ -1,0 +1,122 @@
+---
+title: "PCA y SVD: la estructura oculta de los datos"
+description: Encuentra la dirección de máxima varianza, reduce dimensiones perdiendo lo mínimo y comprime una fotografía real con unos pocos valores singulares.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import VarianceDirection from '../../../components/la/VarianceDirection.svelte';
+import PCAReconstruction from '../../../components/la/PCAReconstruction.svelte';
+import SVDImageCompression from '../../../components/la/SVDImageCompression.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+import { POS, NEG, ACCENT, AXIS, MUTED } from '../../../lib/svm/colors';
+
+<PresentMode client:load title="PCA y SVD: la estructura oculta de los datos" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'pca-intro', label: 'Motivación', slug: 'dónde-vive-realmente-la-información' },
+    { id: 'pca-var', label: 'Varianza', slug: 'la-dirección-de-máxima-varianza' },
+    { id: 'pca-cov', label: 'Covarianza', slug: 'la-covarianza-y-sus-eigenvectores' },
+    { id: 'pca-recon', label: 'Reconstrucción', slug: 'proyectar-y-reconstruir' },
+    { id: 'pca-svd', label: 'SVD', slug: 'svd-y-la-compresión-de-imágenes' },
+  ]}
+/>
+
+Última lección del curso, y la recompensa: juntar vectores, proyecciones, matrices y eigenvectores en las dos herramientas que la ciencia de datos usa a diario para **encontrar la estructura escondida** en datos de muchas dimensiones — PCA y SVD.
+
+## Dónde vive realmente la información
+
+Imagina medir estatura y longitud de brazo de mil personas. Son dos números por persona, pero están tan correlacionados que la nube de puntos forma un cigarro inclinado: los datos *viven* casi en una recta. En realidad hay ~1 dimensión de información vestida con 2 coordenadas.
+
+Ese fenómeno es la regla, no la excepción. Los datasets reales tienen cientos de columnas correlacionadas; los embeddings de un modelo de lenguaje, miles de dimensiones con estructura de mucha menos. **Reducir la dimensión** sin perder lo esencial sirve para visualizar, comprimir, quitar ruido y acelerar modelos. La pregunta técnica es: ¿en qué *direcciones* vive la información?
+
+<SectionComplete id="pca-intro" label="✓ Motivación" />
+
+## La dirección de máxima varianza
+
+"Información", para una nube de datos centrada, significa **varianza**: la dirección en la que los datos más se dispersan es la que más distingue a un punto de otro. Proyectando cada dato $\vec x_i$ sobre una dirección unitaria $\vec w$, la varianza capturada es
+
+$$ \text{var}(\vec w) = \frac{1}{n}\sum_{i=1}^{n} \big(\vec w^{\top}(\vec x_i - \bar{x})\big)^2 $$
+
+Gira la recta y trata de maximizarla a ojo antes de pulsar el botón:
+
+<VarianceDirection client:visible />
+
+<SectionComplete id="pca-var" label="✓ Varianza" />
+
+## La covarianza y sus eigenvectores
+
+¿Por qué el botón acierta siempre? Reescribiendo la varianza con la **matriz de covarianza** $\Sigma = \frac{1}{n}\sum_i (\vec x_i - \bar x)(\vec x_i - \bar x)^{\top}$:
+
+$$ \text{var}(\vec w) = \vec w^{\top}\,\Sigma\,\vec w \qquad\text{con } \lVert\vec w\rVert = 1 $$
+
+Maximizar esta forma cuadrática es un problema con respuesta exacta, y es *la* respuesta de la [lección de eigenvalores](/algebra-lineal/eigenvalores/): el máximo se alcanza en el **eigenvector dominante** de $\Sigma$, y el valor máximo es su eigenvalor:
+
+$$ \Sigma\,\vec w_1 = \lambda_1 \vec w_1 $$
+
+Como $\Sigma$ es simétrica, sus eigenvectores son perpendiculares: el segundo, $\vec w_2$, captura la mayor varianza *restante*. Esos son los **componentes principales**, y el cociente $\lambda_1 / (\lambda_1 + \lambda_2)$ — la "varianza explicada" que reporta cualquier librería de PCA — te dice qué fracción de la información sobrevive si te quedas solo con el primero.
+
+<SectionComplete id="pca-cov" label="✓ Covarianza" />
+
+## Proyectar y reconstruir
+
+**PCA** (análisis de componentes principales) es entonces una receta de tres pasos: centrar los datos, diagonalizar la covarianza y quedarse con los $k$ mejores componentes. Comprimir es proyectar; descomprimir es reconstruir:
+
+$$ z_i = \vec w_1^{\top}(\vec x_i - \bar x) \qquad\longrightarrow\qquad \hat x_i = \bar x + z_i\,\vec w_1 $$
+
+Cada punto pasa de 2 números a 1. La pregunta honesta es cuánto se pierde — y la respuesta geométrica es: los segmentos perpendiculares a la recta. Comprueba que **ninguna otra dirección pierde menos que PC1**:
+
+<PCAReconstruction client:visible />
+
+<Aside type="tip">
+En el curso de ML viste un [autoencoder](/ml/advanced-architectures/) comprimir datos por un cuello de botella. Si el encoder y el decoder son lineales, la solución óptima que la red aprende es exactamente PCA. Los autoencoders profundos generalizan esta idea a proyecciones **no lineales**.
+</Aside>
+
+<SectionComplete id="pca-recon" label="✓ Reconstrucción" />
+
+## SVD y la compresión de imágenes
+
+PCA opera sobre la covarianza de una nube. Su hermana mayor, la **descomposición en valores singulares (SVD)**, factoriza directamente *cualquier* matriz — sin pedirle simetría ni que sea cuadrada:
+
+$$ A = U\,\Sigma\,V^{\top} = \sum_{i=1}^{r} \sigma_i\,\vec u_i\,\vec v_i^{\top} $$
+
+<figure class="not-content mx-auto my-6 max-w-lg">
+  <svg viewBox="0 0 480 150" class="w-full" role="img" aria-label="Diagrama de bloques de la SVD truncada a rango k">
+    <rect x="10" y="30" width="90" height="90" fill={ACCENT} fill-opacity="0.12" stroke={ACCENT} stroke-width="1.5" />
+    <text x="55" y="80" text-anchor="middle" font-size="14" font-weight="700" fill={ACCENT}>A</text>
+    <text x="122" y="80" text-anchor="middle" font-size="15" fill={MUTED}>=</text>
+    <rect x="145" y="30" width="90" height="90" fill={POS} fill-opacity="0.10" stroke={POS} stroke-width="1.5" />
+    <rect x="145" y="30" width="26" height="90" fill={POS} fill-opacity="0.30" stroke={POS} stroke-width="1" />
+    <text x="190" y="140" text-anchor="middle" font-size="12" fill={POS}>U</text>
+    <rect x="250" y="30" width="90" height="90" fill="none" stroke={AXIS} stroke-width="1.5" />
+    <rect x="250" y="30" width="26" height="26" fill={MUTED} fill-opacity="0.35" stroke={MUTED} stroke-width="1" />
+    <line x1="253" y1="33" x2="337" y2="117" stroke={MUTED} stroke-width="1.5" stroke-dasharray="3 3" />
+    <text x="295" y="140" text-anchor="middle" font-size="12" fill={MUTED}>Σ (σᵢ en la diagonal)</text>
+    <rect x="355" y="30" width="90" height="90" fill={NEG} fill-opacity="0.10" stroke={NEG} stroke-width="1.5" />
+    <rect x="355" y="30" width="90" height="26" fill={NEG} fill-opacity="0.30" stroke={NEG} stroke-width="1" />
+    <text x="400" y="140" text-anchor="middle" font-size="12" fill={NEG}>Vᵀ</text>
+  </svg>
+  <figcaption class="mt-1 text-center text-xs text-muted">Truncar en rango k = quedarse con las franjas sombreadas: las k primeras columnas de U, los k mayores σᵢ y las k primeras filas de Vᵀ.</figcaption>
+</figure>
+
+Los **valores singulares** $\sigma_1 \ge \sigma_2 \ge \dots \ge 0$ ordenan las "capas" de la matriz por importancia, y el teorema clave (Eckart–Young) dice que quedarse con las primeras $k$ da la **mejor aproximación de rango $k$** posible.
+
+¿Recuerdas que [una imagen es una matriz](/algebra-lineal/matrices/)? Entonces se puede descomponer. Esta fotografía de Einstein (1921) son $64\times 64 = 4096$ números; mueve $k$ y decide cuántas capas necesita tu ojo:
+
+<SVDImageCompression client:visible />
+
+Guardar rango $k$ cuesta $k(m + n + 1)$ números en vez de $mn$. Con $k=5$: un 16 % del espacio y la cara ya es inconfundible — porque el espectro (las barras) se desploma: **casi toda la matriz vive en las primeras direcciones**. Este mismo truncamiento comprime sistemas de recomendación, quita ruido de señales y fabrica los embeddings clásicos de documentos (LSA).
+
+<SectionComplete id="pca-svd" label="✓ SVD" />
+
+## Resumen
+
+- La información de una nube vive en **direcciones**, no en columnas: la de máxima varianza es la más informativa.
+- Esa dirección es el **eigenvector dominante de la covarianza** — PCA es la lección 4 aplicada a $\Sigma$.
+- Comprimir = **proyectar** sobre los primeros componentes; PC1 es la recta que menos reconstrucción pierde (y un autoencoder lineal la aprende).
+- La **SVD** $A = U\Sigma V^{\top}$ ordena cualquier matriz en capas por importancia; truncarla da la mejor aproximación de rango $k$ — compresión con garantía.
+
+**Fin del curso.** Ya tienes el vocabulario completo: datos como [vectores](/algebra-lineal/vectores/), modelos como [matrices](/algebra-lineal/matrices/), entrenamiento como [mínimos cuadrados](/algebra-lineal/sistemas/), dinámica como [eigenvalores](/algebra-lineal/eigenvalores/) y estructura como PCA/SVD. Con estos lentes, el [curso de Machine Learning](/ml/) se lee de otra manera.

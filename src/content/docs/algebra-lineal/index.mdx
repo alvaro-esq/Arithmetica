@@ -1,0 +1,41 @@
+---
+title: Álgebra Lineal
+description: La matemática que sostiene el machine learning — vectores, matrices, eigenvalores, PCA y SVD — explorada de forma interactiva.
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Casi todo el machine learning es álgebra lineal disfrazada: los datos son vectores, los modelos son matrices, entrenar es proyectar y la estructura se encuentra con eigenvectores. Este curso construye esa base de nivel básico a medio, con visualizaciones que puedes manipular — y cada concepto conectado al modelo de ML donde lo volverás a ver.
+
+<CardGrid>
+  <LinkCard
+    title="1 · Vectores: los datos son flechas"
+    description="Combinaciones lineales, norma, producto punto y similitud coseno — termina buscando palabras por significado en un espacio de embeddings."
+    href="/algebra-lineal/vectores/"
+  />
+  <LinkCard
+    title="2 · Matrices: máquinas que transforman el espacio"
+    description="Arrastra las columnas de una matriz y deforma el plano: rotaciones, cizallas, determinantes y por qué una capa de red neuronal es una matriz."
+    href="/algebra-lineal/matrices/"
+  />
+  <LinkCard
+    title="3 · Sistemas de ecuaciones y mínimos cuadrados"
+    description="Ax = b por filas y por columnas, la proyección ortogonal y las ecuaciones normales — la regresión lineal, deducida con geometría."
+    href="/algebra-lineal/sistemas/"
+  />
+  <LinkCard
+    title="4 · Eigenvalores y eigenvectores"
+    description="Encuentra a mano las direcciones que no giran, itera potencias hasta la dominante y ordena una mini-web con el eigenvector de PageRank."
+    href="/algebra-lineal/eigenvalores/"
+  />
+  <LinkCard
+    title="5 · PCA y SVD: la estructura oculta de los datos"
+    description="Maximiza la varianza, comprime una nube a 1D y reconstruye una fotografía real con unos pocos valores singulares."
+    href="/algebra-lineal/pca-svd/"
+  />
+  <LinkCard
+    title="¿Ya dominas la base? Sigue con el curso de ML"
+    description="Regresión, SVM, árboles, deep learning y reinforcement learning — ahora con los lentes del álgebra lineal."
+    href="/ml/"
+  />
+</CardGrid>

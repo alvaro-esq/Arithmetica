@@ -1,0 +1,137 @@
+---
+title: "Vectores: los datos son flechas"
+description: Vectores como datos, combinaciones lineales, norma, producto punto y similitud coseno — la geometría detrás de la búsqueda semántica.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import VectorCombination from '../../../components/la/VectorCombination.svelte';
+import DotProjection from '../../../components/la/DotProjection.svelte';
+import CosineWordSearch from '../../../components/la/CosineWordSearch.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+import { POS, NEG, ACCENT, AXIS, MUTED } from '../../../lib/svm/colors';
+
+<PresentMode client:load title="Vectores: los datos son flechas" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'vec-intro', label: 'Datos = flechas', slug: 'los-datos-son-flechas' },
+    { id: 'vec-comb', label: 'Combinaciones', slug: 'sumar-y-escalar-combinaciones-lineales' },
+    { id: 'vec-norm', label: 'Norma', slug: 'norma-y-distancia' },
+    { id: 'vec-dot', label: 'Producto punto', slug: 'producto-punto-ángulo-y-proyección' },
+    { id: 'vec-cosine', label: 'Similitud coseno', slug: 'similitud-coseno-y-búsqueda-semántica' },
+  ]}
+/>
+
+Todo modelo de machine learning —de la regresión lineal a un LLM— recibe, transforma y devuelve **vectores**. Antes de entender los modelos hay que dominar la materia prima: qué es un vector, cómo se combinan y cómo se mide si dos se "parecen".
+
+## Los datos son flechas
+
+Un **vector** es tres cosas a la vez, y las tres nos convienen:
+
+- una **lista de números**: $\vec v = (3, 2)$,
+- un **punto** en el espacio: la posición $(3, 2)$,
+- una **flecha** desde el origen hasta ese punto.
+
+En ciencia de datos, cada observación *es* un vector. Un cliente descrito por (edad, gasto mensual) es una flecha en $\mathbb{R}^2$; una imagen de $28\times 28$ píxeles es un vector en $\mathbb{R}^{784}$; una palabra procesada por un modelo de lenguaje se convierte en un **embedding**: un vector en $\mathbb{R}^n$ con cientos de dimensiones.
+
+$$ \vec v = (v_1, v_2, \dots, v_n) \in \mathbb{R}^n $$
+
+No podemos dibujar $\mathbb{R}^{784}$, pero casi toda la intuición geométrica que construiremos en $\mathbb{R}^2$ —sumas, ángulos, proyecciones— se traslada sin cambios a cualquier dimensión. Por eso esta lección vive en el plano.
+
+<SectionComplete id="vec-intro" label="✓ Datos = flechas" />
+
+## Sumar y escalar: combinaciones lineales
+
+Con vectores solo hay dos operaciones básicas, y ambas son geométricas:
+
+$$ \vec u + \vec v = (u_1 + v_1,\; u_2 + v_2) \qquad\qquad c\,\vec v = (c\,v_1,\; c\,v_2) $$
+
+**Sumar** es poner una flecha a continuación de la otra (la regla del paralelogramo). **Escalar** es estirar, encoger o voltear una flecha sin cambiar su dirección. Al mezclar las dos operaciones obtenemos el concepto central de todo el curso, la **combinación lineal**:
+
+$$ \vec w = \alpha\,\vec u + \beta\,\vec v $$
+
+Juega con ella: arrastra $\vec u$ y $\vec v$, mueve $\alpha$ y $\beta$, y trata de alcanzar la estrella.
+
+<VectorCombination client:visible />
+
+Dos observaciones valen la lección entera. Primera: si $\vec u$ y $\vec v$ **no son paralelos**, con ellos alcanzas *cualquier* punto del plano — se dice que **generan** (su *span* es) todo $\mathbb{R}^2$. Segunda: pulsa «Hazlos paralelos» y el mundo alcanzable colapsa a una recta; la estrella queda, casi siempre, fuera. El botón «Resolver» hace algo que formalizaremos en la [lección de sistemas](/algebra-lineal/sistemas/): encontrar $\alpha$ y $\beta$ exactos es resolver un sistema de ecuaciones.
+
+<SectionComplete id="vec-comb" label="✓ Combinaciones" />
+
+## Norma y distancia
+
+La **norma** de un vector es su longitud, y sale directamente de Pitágoras:
+
+$$ \lVert\vec v\rVert = \sqrt{v_1^2 + v_2^2} \qquad \text{(y en general } \sqrt{\textstyle\sum_i v_i^2}\text{)} $$
+
+<figure class="not-content mx-auto my-6 max-w-sm">
+  <svg viewBox="0 0 300 190" class="w-full" role="img" aria-label="La norma de un vector por el teorema de Pitágoras">
+    <line x1="30" y1="160" x2="290" y2="160" stroke={AXIS} stroke-width="1.5" />
+    <line x1="30" y1="160" x2="30" y2="10" stroke={AXIS} stroke-width="1.5" />
+    <line x1="30" y1="160" x2="230" y2="160" stroke={NEG} stroke-width="2.5" />
+    <line x1="230" y1="160" x2="230" y2="50" stroke={NEG} stroke-width="2.5" />
+    <path d="M 218 160 L 218 148 L 230 148" fill="none" stroke={MUTED} stroke-width="1.5" />
+    <line x1="30" y1="160" x2="230" y2="50" stroke={POS} stroke-width="3" />
+    <text x="120" y="152" font-size="13" fill={NEG}>v₁</text>
+    <text x="238" y="110" font-size="13" fill={NEG}>v₂</text>
+    <text x="100" y="90" font-size="13" font-weight="700" fill={POS}>‖v‖ = √(v₁² + v₂²)</text>
+  </svg>
+  <figcaption class="mt-1 text-center text-xs text-muted">La flecha es la hipotenusa de un triángulo cuyos catetos son sus componentes.</figcaption>
+</figure>
+
+Con la norma medimos la **distancia** entre dos datos —la longitud del vector que los separa— y fabricamos **vectores unitarios**, de longitud 1, que capturan solo una dirección:
+
+$$ d(\vec u, \vec v) = \lVert\vec u - \vec v\rVert \qquad\qquad \hat v = \frac{\vec v}{\lVert\vec v\rVert} $$
+
+Ambas ideas son pan de cada día en ML: la distancia euclidiana alimenta algoritmos como k-vecinos y k-means, y **normalizar** vectores (convertirlos en unitarios) es el paso previo típico antes de comparar embeddings.
+
+<SectionComplete id="vec-norm" label="✓ Norma" />
+
+## Producto punto, ángulo y proyección
+
+La operación estrella del álgebra lineal tiene dos caras. La **algebraica** es una suma de productos; la **geométrica** revela qué mide:
+
+$$ \vec u \cdot \vec v = \sum_i u_i v_i = \lVert\vec u\rVert\,\lVert\vec v\rVert\,\cos\theta $$
+
+El signo lo dice todo: **positivo** si las flechas apuntan en direcciones parecidas ($\theta < 90°$), **cero** si son perpendiculares, **negativo** si se oponen. Y de él nace la **proyección**: la "sombra" que $\vec u$ arroja sobre la dirección de $\vec v$:
+
+$$ \text{proy}_{\vec v}\,\vec u = \frac{\vec u \cdot \vec v}{\vec v \cdot \vec v}\,\vec v $$
+
+Arrastra las flechas y observa la sombra y la frontera punteada donde el producto se anula:
+
+<DotProjection client:visible />
+
+<Aside type="tip">
+Esa frontera punteada es, literalmente, un **clasificador lineal**. Una [máquina de vectores de soporte](/ml/svm/) decide la clase de un punto $x$ mirando el signo de $w\cdot x + b$: de qué lado de la frontera cae. Todo el capítulo de SVM es geometría de productos punto.
+</Aside>
+
+<SectionComplete id="vec-dot" label="✓ Producto punto" />
+
+## Similitud coseno y búsqueda semántica
+
+Si el producto punto mide alineación pero crece con la longitud de los vectores, dividir entre ambas normas deja solo el ángulo. Esa es la **similitud coseno**:
+
+$$ \text{sim}(\vec u, \vec v) = \cos\theta = \frac{\vec u \cdot \vec v}{\lVert\vec u\rVert\,\lVert\vec v\rVert} \;\in\; [-1, 1] $$
+
+Vale $1$ para direcciones idénticas, $0$ para no relacionadas, $-1$ para opuestas. Y es exactamente como un buscador semántico decide qué documentos "se parecen" a tu pregunta: convierte todo a embeddings y ordena por coseno.
+
+Aquí tienes un espacio de embeddings de juguete en 2D. Arrastra la flecha de consulta y mira el ranking:
+
+<CosineWordSearch client:visible />
+
+Prueba el preset «rey − hombre + mujer»: la aritmética de vectores captura la analogía y aterriza en *reina*. Los embeddings reales (word2vec, y los de cualquier LLM moderno) muestran esta misma estructura, solo que en cientos de dimensiones: **direcciones ≈ significados**, y restar/sumar vectores mueve entre significados.
+
+<SectionComplete id="vec-cosine" label="✓ Similitud coseno" />
+
+## Resumen
+
+- Un dato es un **vector**: lista de números, punto y flecha a la vez. Toda la intuición de $\mathbb{R}^2$ escala a $\mathbb{R}^n$.
+- **Combinación lineal** $\alpha\vec u + \beta\vec v$: la operación fundamental. Dos vectores no paralelos generan todo el plano; paralelos, solo una recta.
+- La **norma** mide longitud y da la **distancia** entre datos; normalizar deja solo la dirección.
+- El **producto punto** mide alineación ($+$, $0$, $-$) y produce **proyecciones** — la base de los clasificadores lineales.
+- La **similitud coseno** compara direcciones ignorando longitudes: así funciona la búsqueda semántica con embeddings.
+
+En la [siguiente lección](/algebra-lineal/matrices/) subimos un nivel: las **matrices**, máquinas que transforman todos los vectores del plano de golpe.

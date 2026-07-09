@@ -1,0 +1,125 @@
+---
+title: Eigenvalores y eigenvectores
+description: Las direcciones que una matriz no gira — iteración de potencias, gradientes que explotan, cadenas de Markov y el eigenvector detrás de PageRank.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import EigenExplorer from '../../../components/la/EigenExplorer.svelte';
+import PowerIteration from '../../../components/la/PowerIteration.svelte';
+import MiniPageRank from '../../../components/la/MiniPageRank.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+import { POS, NEG, ACCENT, AXIS, MUTED } from '../../../lib/svm/colors';
+
+<PresentMode client:load title="Eigenvalores y eigenvectores" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'eig-explore', label: 'Eigenvectores', slug: 'direcciones-que-no-giran' },
+    { id: 'eig-power', label: 'Iteración de potencias', slug: 'multiplicar-una-y-otra-vez' },
+    { id: 'eig-gradients', label: 'Gradientes', slug: 'por-qué-explotan-los-gradientes' },
+    { id: 'eig-markov', label: 'Markov', slug: 'cadenas-de-markov-y-el-estado-estacionario' },
+    { id: 'eig-pagerank', label: 'Mini PageRank', slug: 'mini-pagerank' },
+  ]}
+/>
+
+Una matriz revuelve el plano entero: gira, estira, cizalla. Pero casi toda matriz esconde unas pocas **direcciones privilegiadas** que salen intactas — la matriz solo las estira. Encontrarlas es, quizá, la pregunta más rentable del álgebra lineal: de ahí salen PCA, PageRank, la estabilidad de las redes profundas y buena parte de la física.
+
+## Direcciones que no giran
+
+Un vector $\vec v \ne \vec 0$ es un **eigenvector** de $A$ si al aplicarle la matriz no cambia de recta, solo de tamaño:
+
+$$ A\vec v = \lambda\,\vec v $$
+
+El factor $\lambda$ es su **eigenvalor**: cuánto estira ($|\lambda| > 1$), encoge ($|\lambda| < 1$) o voltea ($\lambda < 0$) esa dirección. Búscalos a mano — gira $\vec v$ hasta que $A\vec v$ caiga sobre su misma recta:
+
+<EigenExplorer client:visible />
+
+Cada matriz cuenta una historia distinta. La **simétrica** tiene dos eigen-direcciones perpendiculares (esto siempre pasa con simétricas, y será la clave de [PCA](/algebra-lineal/pca-svd/)). La **cizalla** solo tiene una. Y la **rotación** no tiene ninguna real: por eso al buscarla no encuentras nada — sus eigenvalores son números complejos, y "girar" es justamente lo que hace.
+
+De la definición sale el método clásico para calcularlos: $A\vec v = \lambda\vec v$ exige que $A - \lambda I$ aplaste a $\vec v$ en cero, es decir $\det(A - \lambda I) = 0$ — el **polinomio característico**, cuyas raíces son los eigenvalores.
+
+<SectionComplete id="eig-explore" label="✓ Eigenvectores" />
+
+## Multiplicar una y otra vez
+
+¿Qué pasa si aplicas $A$ muchas veces? Escribe el vector inicial en la base de eigenvectores, $\vec v_0 = c_1\vec v_1 + c_2\vec v_2$, y cada aplicación multiplica cada pieza por su $\lambda$:
+
+$$ A^k\vec v_0 = c_1\,\lambda_1^k\,\vec v_1 + c_2\,\lambda_2^k\,\vec v_2 \;\approx\; c_1\,\lambda_1^k\,\vec v_1 \quad \text{cuando } |\lambda_1| > |\lambda_2| $$
+
+El término con el eigenvalor **dominante** se come a los demás: la dirección converge al eigenvector dominante, sin importar de dónde partiste. Este algoritmo —multiplicar y renormalizar— se llama **iteración de potencias**, y el cociente de Rayleigh $\vec v^{\top} A \vec v / \vec v^{\top}\vec v$ estima $\lambda_1$ sobre la marcha:
+
+<PowerIteration client:visible />
+
+Observa la barra lateral: la *dirección* siempre se asienta (si hay eigenvalores reales), pero la *magnitud* $\lVert A^k \vec v_0\rVert \sim |\lambda_1|^k$ explota o se desvanece exponencialmente según $|\lambda_1|$ esté por encima o por debajo de 1.
+
+<SectionComplete id="eig-power" label="✓ Iteración de potencias" />
+
+## Por qué explotan los gradientes
+
+Esa exponencial no es una curiosidad: es el mecanismo exacto detrás de uno de los dolores clásicos del deep learning. Al [retropropagar](/ml/deep-learning/) el error por una red de muchas capas —o por una [red recurrente](/ml/recurrent-neural-networks/) desenrollada en el tiempo— el gradiente atraviesa un producto de matrices, una por capa o por paso temporal:
+
+$$ \frac{\partial \mathcal{L}}{\partial h_0} \;\sim\; W^{\top} W^{\top} \cdots W^{\top}\, \nabla \;\Longrightarrow\; \lVert\text{gradiente}\rVert \sim |\lambda_1(W)|^{k} $$
+
+Es la iteración de potencias otra vez, con el gradiente como pasajero. Si el eigenvalor dominante de los pesos supera 1, el gradiente **explota**; si queda por debajo, **se desvanece** y las capas lejanas dejan de aprender. Las curas que viste en el curso de ML —inicialización cuidadosa, gradient clipping, las compuertas de una LSTM— son formas de domar ese $|\lambda_1|^k$.
+
+<SectionComplete id="eig-gradients" label="✓ Gradientes" />
+
+## Cadenas de Markov y el estado estacionario
+
+Cambiemos de disfraz. Un sistema que salta entre estados con probabilidades fijas es una **cadena de Markov**, y su dinámica es — otra vez — multiplicar por una matriz:
+
+<figure class="not-content mx-auto my-6 max-w-md">
+  <svg viewBox="0 0 400 170" class="w-full" role="img" aria-label="Cadena de Markov de dos estados, soleado y lluvia, con sus probabilidades de transición">
+    <path d="M 95 55 A 32 32 0 1 1 130 78" fill="none" stroke={AXIS} stroke-width="2" />
+    <text x="112" y="22" text-anchor="middle" font-size="12" fill={MUTED}>0.9</text>
+    <path d="M 160 95 Q 215 70 268 92" fill="none" stroke={POS} stroke-width="2" />
+    <path d="M 268 92 l -10 -6 m 10 6 l -11 4" stroke={POS} stroke-width="2" fill="none" />
+    <text x="215" y="68" text-anchor="middle" font-size="12" fill={POS}>0.1</text>
+    <path d="M 268 125 Q 215 150 160 128" fill="none" stroke={NEG} stroke-width="2" />
+    <path d="M 160 128 l 11 -4 m -11 4 l 10 7" stroke={NEG} stroke-width="2" fill="none" />
+    <text x="215" y="158" text-anchor="middle" font-size="12" fill={NEG}>0.5</text>
+    <path d="M 305 60 A 32 32 0 1 1 338 85" fill="none" stroke={AXIS} stroke-width="2" />
+    <text x="322" y="26" text-anchor="middle" font-size="12" fill={MUTED}>0.5</text>
+    <circle cx="125" cy="110" r="34" fill={POS} fill-opacity="0.14" stroke={POS} stroke-width="2" />
+    <text x="125" y="115" text-anchor="middle" font-size="13" font-weight="700" fill={POS}>soleado</text>
+    <circle cx="300" cy="110" r="34" fill={NEG} fill-opacity="0.14" stroke={NEG} stroke-width="2" />
+    <text x="300" y="115" text-anchor="middle" font-size="13" font-weight="700" fill={NEG}>lluvia</text>
+  </svg>
+  <figcaption class="mt-1 text-center text-xs text-muted">Mañana depende solo de hoy: eso es la propiedad de Markov.</figcaption>
+</figure>
+
+Si $\vec\pi_t$ es la distribución de probabilidad de hoy (sus entradas suman 1) y $P$ la matriz de transición (cada fila suma 1), mañana será $\vec\pi_{t+1} = \vec\pi_t P$. Iterar esta multiplicación —potencias otra vez— lleva a muchas cadenas a un equilibrio, la **distribución estacionaria**:
+
+$$ \vec\pi\,P = \vec\pi $$
+
+Léelo con los ojos de esta lección: $\vec\pi$ es un **eigenvector de $P^{\top}$ con $\lambda = 1$**. Para la cadena del clima de arriba, el equilibrio es $\vec\pi = (5/6,\, 1/6)$: llueva lo que llueva hoy, a largo plazo el 83 % de los días son soleados.
+
+<SectionComplete id="eig-markov" label="✓ Markov" />
+
+## Mini PageRank
+
+En 1998, Google ordenó la web con exactamente esta idea. Un **navegante aleatorio** hace clic en enlaces al azar; con probabilidad $1-d$ se aburre y teletransporta a una página cualquiera:
+
+$$ \vec\pi = \vec\pi \left( d\,P + \tfrac{1-d}{n}\mathbf{1}\mathbf{1}^{\top} \right) $$
+
+El **PageRank** de una página es su probabilidad en la distribución estacionaria: el eigenvector dominante de la matriz "Google". Edita los enlaces (cada casilla de la matriz es una arista) y mira el ranking reordenarse:
+
+<MiniPageRank client:visible />
+
+<Aside type="note">
+Prueba la **granja de enlaces** con amortiguación alta: dos páginas que solo se enlazan entre sí atrapan al navegante y acaparan rank. El término de teletransporte $(1-d)$ existe precisamente para desinflar esa trampa — y de paso garantiza que la distribución estacionaria exista y sea única.
+</Aside>
+
+<SectionComplete id="eig-pagerank" label="✓ Mini PageRank" />
+
+## Resumen
+
+- Un **eigenvector** solo se estira: $A\vec v = \lambda\vec v$. Simétricas: direcciones perpendiculares; cizallas: una sola; rotaciones: ninguna real.
+- **Multiplicar repetidamente** alinea cualquier vector con el eigenvector dominante (iteración de potencias), y la magnitud va como $|\lambda_1|^k$.
+- Ese exponencial explica los **gradientes que explotan o se desvanecen** en redes profundas y recurrentes.
+- Una cadena de **Markov** converge a su distribución estacionaria: un eigenvector con $\lambda = 1$. **PageRank** es exactamente eso sobre el grafo de la web.
+
+En la [última lección](/algebra-lineal/pca-svd/), los eigenvectores de una matriz muy especial —la covarianza de tus datos— revelarán dónde vive la información: **PCA y SVD**.

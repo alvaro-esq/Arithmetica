@@ -37,6 +37,18 @@ export default defineConfig({
         { label: "Inicio", link: "/" },
         { label: "El curso", link: "ml/" },
         {
+          label: "Álgebra Lineal",
+          collapsed: false,
+          items: [
+            { label: "Fundamentos", link: "algebra-lineal/" },
+            { label: "Vectores: los datos son flechas", link: "algebra-lineal/vectores/" },
+            { label: "Matrices: máquinas que transforman", link: "algebra-lineal/matrices/" },
+            { label: "Sistemas y mínimos cuadrados", link: "algebra-lineal/sistemas/" },
+            { label: "Eigenvalores y eigenvectores", link: "algebra-lineal/eigenvalores/" },
+            { label: "PCA y SVD", link: "algebra-lineal/pca-svd/" },
+          ],
+        },
+        {
           label: "Modelos clásicos",
           collapsed: false,
           items: [

@@ -1,0 +1,112 @@
+---
+title: Sistemas de ecuaciones y mínimos cuadrados
+description: Dos formas de ver Ax = b, qué hacer cuando no existe solución exacta, y cómo la proyección ortogonal se convierte en regresión lineal.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import RowColumnPicture from '../../../components/la/RowColumnPicture.svelte';
+import ProjectionResidual from '../../../components/la/ProjectionResidual.svelte';
+import NormalEquationsFit from '../../../components/la/NormalEquationsFit.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+import { POS, NEG, ACCENT, AXIS, MUTED } from '../../../lib/svm/colors';
+
+<PresentMode client:load title="Sistemas de ecuaciones y mínimos cuadrados" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'sis-views', label: 'Dos vistas', slug: 'dos-formas-de-ver-un-sistema' },
+    { id: 'sis-nosol', label: 'Sin solución', slug: 'cuando-no-hay-solución' },
+    { id: 'sis-proj', label: 'Proyección', slug: 'la-proyección-al-rescate' },
+    { id: 'sis-normal', label: 'Ecuaciones normales', slug: 'las-ecuaciones-normales-y-la-regresión-lineal' },
+  ]}
+/>
+
+En la [lección anterior](/algebra-lineal/matrices/) una matriz transformaba $\vec x$ en $A\vec x$. Hoy le damos la vuelta: conocemos el **resultado** $\vec b$ y buscamos qué $\vec x$ lo produce. Eso es resolver $A\vec x = \vec b$ — y cuando no se puede resolver exactamente, *casi* resolverlo es una de las ideas más rentables de todo el machine learning.
+
+## Dos formas de ver un sistema
+
+El mismo par de ecuaciones se puede leer con dos geometrías distintas:
+
+$$ \begin{cases} x_1 + x_2 = 2 \\ x_1 - x_2 = 0 \end{cases} \qquad\Longleftrightarrow\qquad \underbrace{\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}}_{A}\begin{pmatrix} x_1 \\ x_2 \end{pmatrix} = \underbrace{\begin{pmatrix} 2 \\ 0 \end{pmatrix}}_{\vec b} $$
+
+**Por filas**: cada ecuación es una recta, y la solución es su punto de cruce. **Por columnas** —la lectura de la lección 2— buscamos la combinación $x_1\,\text{col}_1 + x_2\,\text{col}_2$ que alcanza $\vec b$. Mueve los deslizadores: gobiernan ambas vistas a la vez, porque son el mismo hecho:
+
+<RowColumnPicture client:visible />
+
+El preset «Sin solución» encierra la moraleja: **rectas paralelas** en la vista por filas y **columnas colineales** (con $\vec b$ fuera de su recta) en la de columnas son la misma enfermedad — justo el caso $\det A = 0$ que en la lección pasada aplastaba el plano.
+
+<SectionComplete id="sis-views" label="✓ Dos vistas" />
+
+## Cuando no hay solución
+
+En la práctica, los sistemas de la ciencia de datos casi nunca tienen solución exacta — y no por mala suerte, sino por diseño. Si medimos 10 puntos $(t_i, y_i)$ y proponemos el modelo $y \approx \theta_1 t + \theta_0$, pedimos que se cumplan **10 ecuaciones con solo 2 incógnitas**:
+
+$$ \underbrace{\begin{pmatrix} t_1 & 1 \\ t_2 & 1 \\ \vdots & \vdots \\ t_{10} & 1 \end{pmatrix}}_{A \,\in\, \mathbb{R}^{10\times 2}} \begin{pmatrix} \theta_1 \\ \theta_0 \end{pmatrix} = \begin{pmatrix} y_1 \\ y_2 \\ \vdots \\ y_{10} \end{pmatrix} $$
+
+Un sistema **sobredeterminado**: las columnas de $A$ solo generan un plano de dimensión 2 dentro de $\mathbb{R}^{10}$, y el vector $\vec b$ de datos ruidosos casi nunca cae en él. La salida honesta no es rendirse, sino pedir lo mejor posible: minimizar el **residuo**
+
+$$ \vec r = \vec b - A\vec x, \qquad \min_{\vec x}\; \lVert \vec r \rVert^2 $$
+
+Eso es, literalmente, **mínimos cuadrados**: elegir $\vec x$ para que la suma de los errores al cuadrado sea mínima.
+
+<SectionComplete id="sis-nosol" label="✓ Sin solución" />
+
+## La proyección al rescate
+
+¿Y cuál es el punto del espacio de columnas más cercano a $\vec b$? La [lección 1](/algebra-lineal/vectores/) ya tenía la respuesta: la **proyección ortogonal**. El residuo más corto es el que cae **perpendicular** al espacio de columnas.
+
+<figure class="not-content mx-auto my-6 max-w-md">
+  <svg viewBox="0 0 380 200" class="w-full" role="img" aria-label="Proyección de b sobre el espacio de columnas: el residuo es perpendicular">
+    <polygon points="20,170 220,170 340,120 140,120" fill={POS} fill-opacity="0.09" stroke={POS} stroke-width="1" />
+    <text x="36" y="160" font-size="12" fill={POS}>espacio de columnas de A</text>
+    <line x1="180" y1="146" x2="300" y2="30" stroke={NEG} stroke-width="2.5" />
+    <line x1="180" y1="146" x2="300" y2="146" stroke={ACCENT} stroke-width="2.5" />
+    <line x1="300" y1="146" x2="300" y2="30" stroke={MUTED} stroke-width="2" stroke-dasharray="5 4" />
+    <path d="M 300 134 L 289 134 L 289 146" fill="none" stroke={MUTED} stroke-width="1.5" />
+    <circle cx="180" cy="146" r="3.5" fill={NEG} />
+    <text x="298" y="22" font-size="13" font-weight="700" fill={NEG}>b</text>
+    <text x="290" y="166" font-size="13" font-weight="700" fill={ACCENT}>b̂ = Ax̂</text>
+    <text x="308" y="95" font-size="13" font-weight="700" fill={MUTED}>r = b − b̂</text>
+  </svg>
+  <figcaption class="mt-1 text-center text-xs text-muted">La mejor aproximación b̂ es la sombra de b sobre el espacio alcanzable; el error r queda perpendicular.</figcaption>
+</figure>
+
+Compruébalo con una sola columna. Desliza $\hat x$ y observa el número $\vec a^{\,\top}\vec r$: el residuo es mínimo **exactamente** cuando ese producto punto se anula:
+
+<ProjectionResidual client:visible />
+
+Esa condición de perpendicularidad, $\vec a^{\,\top}(\vec b - \hat x\,\vec a) = 0$, se despeja en una línea:
+
+$$ \hat x = \frac{\vec a^{\,\top}\vec b}{\vec a^{\,\top}\vec a} $$
+
+— la misma fórmula de proyección de la lección 1, ahora con nombre de estimador.
+
+<SectionComplete id="sis-proj" label="✓ Proyección" />
+
+## Las ecuaciones normales y la regresión lineal
+
+Con varias columnas, la condición "el residuo es perpendicular a **cada** columna" se escribe de golpe como $A^{\top}\vec r = \vec 0$, y despejando aparecen las **ecuaciones normales**:
+
+$$ A^{\top}\!A\,\hat x = A^{\top}\vec b \qquad\Longrightarrow\qquad \hat x = (A^{\top}\!A)^{-1}A^{\top}\vec b $$
+
+Un sistema *pequeño* ($2\times 2$ para una recta) que resuelve el sistema *grande* de la mejor manera posible. Ajusta la recta a mano y luego deja que las ecuaciones normales lo hagan de un plumazo:
+
+<NormalEquationsFit client:visible />
+
+<Aside type="tip">
+Esto es exactamente lo que hace la [lección de regresión lineal](/ml/linear-regression/) del curso de ML. Allí se cuenta como "minimizar el error cuadrático"; aquí ves **por qué** la solución tiene esa forma: es una proyección ortogonal sobre el espacio de columnas. Mismo modelo, dos idiomas.
+</Aside>
+
+<SectionComplete id="sis-normal" label="✓ Ecuaciones normales" />
+
+## Resumen
+
+- Un sistema $A\vec x = \vec b$ tiene dos geometrías: **rectas que se cruzan** (filas) y **columnas que combinan** para alcanzar $\vec b$. Fallan juntas: paralelas ⟺ colineales.
+- Con más ecuaciones que incógnitas (el caso típico con datos), $\vec b$ no es alcanzable: se minimiza el residuo $\lVert\vec b - A\vec x\rVert^2$.
+- El mínimo se logra **proyectando**: el residuo óptimo es perpendicular al espacio de columnas.
+- Esa perpendicularidad son las **ecuaciones normales** $A^{\top}\!A\,\hat x = A^{\top}\vec b$ — la fórmula cerrada de la regresión lineal.
+
+En la [siguiente lección](/algebra-lineal/eigenvalores/) dejamos de preguntar "¿qué $\vec x$ produce $\vec b$?" y preguntamos algo más profundo: ¿qué direcciones deja una matriz **sin girar**?

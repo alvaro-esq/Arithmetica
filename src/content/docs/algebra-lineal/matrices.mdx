@@ -1,0 +1,155 @@
+---
+title: "Matrices: máquinas que transforman el espacio"
+description: Multiplicar por una matriz es transformar el plano — rotaciones, cizallas, determinantes, composición, y por qué una capa de red neuronal es exactamente esto.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import MatrixTransform from '../../../components/la/MatrixTransform.svelte';
+import MatrixComposition from '../../../components/la/MatrixComposition.svelte';
+import ImageMatrix from '../../../components/la/ImageMatrix.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+import { POS, NEG, ACCENT, AXIS, MUTED } from '../../../lib/svm/colors';
+
+<PresentMode client:load title="Matrices: máquinas que transforman el espacio" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'mat-intro', label: 'Matriz × vector', slug: 'una-máquina-que-mueve-puntos' },
+    { id: 'mat-transform', label: 'Transformaciones', slug: 'las-columnas-dicen-todo' },
+    { id: 'mat-det', label: 'Determinante', slug: 'el-determinante-mide-el-área' },
+    { id: 'mat-compose', label: 'Composición', slug: 'componer-transformaciones-el-orden-importa' },
+    { id: 'mat-ml', label: 'Matrices en ML', slug: 'matrices-en-machine-learning' },
+  ]}
+/>
+
+En la [lección anterior](/algebra-lineal/vectores/) los vectores eran los protagonistas. Ahora entra la maquinaria: una **matriz** es una función que toma un vector y devuelve otro — y no cualquier función, sino una que transforma **todo el plano de una vez**, de forma rígida y predecible.
+
+## Una máquina que mueve puntos
+
+Una matriz $2\times 2$ son solo cuatro números, pero al multiplicarla por un vector se convierte en una **transformación**:
+
+$$ A = \begin{pmatrix} a & b \\ c & d \end{pmatrix}, \qquad A\vec x = \begin{pmatrix} a & b \\ c & d \end{pmatrix}\begin{pmatrix} x_1 \\ x_2 \end{pmatrix} = \begin{pmatrix} a\,x_1 + b\,x_2 \\ c\,x_1 + d\,x_2 \end{pmatrix} $$
+
+Cada componente de la salida es un **producto punto** entre una fila de $A$ y el vector $\vec x$ — la operación de la lección 1, dos veces. La multiplicación matriz-vector no es una operación nueva: es una forma compacta de aplicar varios productos punto a la vez.
+
+Ser **lineal** significa respetar sumas y escalados: $A(\alpha\vec u + \beta\vec v) = \alpha A\vec u + \beta A\vec v$. Esa restricción tiene una consecuencia visual: las rectas siguen siendo rectas, el origen no se mueve, y las cuadrículas se deforman en cuadrículas de paralelogramos.
+
+<SectionComplete id="mat-intro" label="✓ Matriz × vector" />
+
+## Las columnas dicen todo
+
+Hay un truco para *leer* una matriz sin calcular nada. Mira qué hace con los dos vectores base $\hat e_1 = (1,0)$ y $\hat e_2 = (0,1)$:
+
+$$ A\hat e_1 = \begin{pmatrix} a \\ c \end{pmatrix} = \text{primera columna}, \qquad A\hat e_2 = \begin{pmatrix} b \\ d \end{pmatrix} = \text{segunda columna} $$
+
+**Las columnas de $A$ son los destinos de la base.** Y como cualquier vector es combinación de la base, $\vec x = x_1\hat e_1 + x_2\hat e_2$, la linealidad hace el resto:
+
+$$ A\vec x = x_1 \underbrace{\begin{pmatrix} a \\ c \end{pmatrix}}_{\text{col}_1} + \; x_2 \underbrace{\begin{pmatrix} b \\ d \end{pmatrix}}_{\text{col}_2} $$
+
+¡Multiplicar por una matriz es hacer una **combinación lineal de sus columnas**! Arrastra las dos flechas de colores (las columnas) y verás el plano entero obedecer. Prueba los presets: la matriz de rotación, por ejemplo, es simplemente "las columnas son la base girada θ":
+
+$$ R_\theta = \begin{pmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{pmatrix} $$
+
+<MatrixTransform client:visible />
+
+<SectionComplete id="mat-transform" label="✓ Transformaciones" />
+
+## El determinante mide el área
+
+En la visualización anterior, el paralelogramo sombreado es la imagen del **cuadrado unitario**. Su área con signo es el **determinante**:
+
+$$ \det A = ad - bc $$
+
+<figure class="not-content mx-auto my-6 max-w-lg">
+  <svg viewBox="0 0 460 190" class="w-full" role="img" aria-label="El cuadrado unitario se transforma en un paralelogramo de área igual al determinante">
+    <line x1="20" y1="160" x2="200" y2="160" stroke={AXIS} stroke-width="1.5" />
+    <line x1="40" y1="180" x2="40" y2="20" stroke={AXIS} stroke-width="1.5" />
+    <rect x="40" y="80" width="80" height="80" fill={ACCENT} fill-opacity="0.15" stroke={ACCENT} stroke-width="1.5" />
+    <text x="66" y="126" font-size="12" fill={ACCENT}>área 1</text>
+    <path d="M 225 95 L 255 95 M 247 88 L 256 95 L 247 102" fill="none" stroke={MUTED} stroke-width="2" />
+    <text x="222" y="82" font-size="12" fill={MUTED}>A</text>
+    <line x1="270" y1="160" x2="450" y2="160" stroke={AXIS} stroke-width="1.5" />
+    <line x1="290" y1="180" x2="290" y2="20" stroke={AXIS} stroke-width="1.5" />
+    <polygon points="290,160 390,140 420,60 320,80" fill={POS} fill-opacity="0.2" stroke={POS} stroke-width="1.5" />
+    <text x="322" y="115" font-size="12" fill={POS}>área |det A|</text>
+  </svg>
+  <figcaption class="mt-1 text-center text-xs text-muted">El determinante es el factor por el que la transformación multiplica todas las áreas.</figcaption>
+</figure>
+
+Tres lecturas del número, que puedes comprobar arriba con los presets:
+
+- $\lvert\det A\rvert > 1$ **expande** áreas; $\lvert\det A\rvert < 1$ las **comprime** (la escala $2 \times 0.5$ deja las áreas iguales: $\det = 1$).
+- $\det A < 0$ **voltea la orientación** del plano (la reflexión: el paralelogramo cambia de color).
+- $\det A = 0$ es el caso dramático: el plano entero se **aplasta a una recta** (prueba «Singular» o «Proyección al eje x»). No hay vuelta atrás: dos puntos distintos caen en el mismo lugar, así que la matriz **no tiene inversa**. Por eso $\det \ne 0 \iff A^{-1}$ existe.
+
+<SectionComplete id="mat-det" label="✓ Determinante" />
+
+## Componer transformaciones: el orden importa
+
+¿Qué pasa al aplicar una transformación **después** de otra? El resultado sigue siendo lineal, y su matriz es el **producto**:
+
+$$ (A B)\,\vec x = A\,(B\,\vec x) \qquad \text{— primero actúa } B\text{, después } A $$
+
+La multiplicación de matrices *es* composición de funciones. Y como componer funciones no es simétrico, el producto **no conmuta**: rotar y luego cizallar no es lo mismo que cizallar y luego rotar. Compruébalo — los dos fantasmas punteados son los dos resultados posibles:
+
+<MatrixComposition client:visible />
+
+<Aside type="note">
+Busca un par que **sí** conmute (pista: elige la misma opción dos veces, o piensa qué pares de transformaciones no interfieren). Que $AB = BA$ sea la excepción y no la regla es de las primeras sorpresas del álgebra lineal.
+</Aside>
+
+<SectionComplete id="mat-compose" label="✓ Composición" />
+
+## Matrices en Machine Learning
+
+Este no es un desvío teórico: las matrices son el material del que están hechas las redes neuronales. Una **capa lineal** (o *densa*) con 2 entradas y 3 neuronas hace exactamente:
+
+$$ \vec y = W\vec x + \vec b, \qquad W \in \mathbb{R}^{3\times 2} $$
+
+<figure class="not-content mx-auto my-6 max-w-md">
+  <svg viewBox="0 0 380 200" class="w-full" role="img" aria-label="Capa lineal de red neuronal con dos entradas y tres salidas, cuyos pesos forman la matriz W">
+    <line x1="90" y1="60" x2="270" y2="40" stroke={AXIS} stroke-width="1.5" />
+    <line x1="90" y1="60" x2="270" y2="100" stroke={AXIS} stroke-width="1.5" />
+    <line x1="90" y1="60" x2="270" y2="160" stroke={AXIS} stroke-width="1.5" />
+    <line x1="90" y1="140" x2="270" y2="40" stroke={AXIS} stroke-width="1.5" />
+    <line x1="90" y1="140" x2="270" y2="100" stroke={AXIS} stroke-width="1.5" />
+    <line x1="90" y1="140" x2="270" y2="160" stroke={AXIS} stroke-width="1.5" />
+    <circle cx="90" cy="60" r="17" fill={NEG} fill-opacity="0.15" stroke={NEG} stroke-width="1.5" />
+    <circle cx="90" cy="140" r="17" fill={NEG} fill-opacity="0.15" stroke={NEG} stroke-width="1.5" />
+    <circle cx="270" cy="40" r="17" fill={POS} fill-opacity="0.15" stroke={POS} stroke-width="1.5" />
+    <circle cx="270" cy="100" r="17" fill={POS} fill-opacity="0.15" stroke={POS} stroke-width="1.5" />
+    <circle cx="270" cy="160" r="17" fill={POS} fill-opacity="0.15" stroke={POS} stroke-width="1.5" />
+    <text x="90" y="65" text-anchor="middle" font-size="12" fill={NEG}>x₁</text>
+    <text x="90" y="145" text-anchor="middle" font-size="12" fill={NEG}>x₂</text>
+    <text x="270" y="45" text-anchor="middle" font-size="12" fill={POS}>y₁</text>
+    <text x="270" y="105" text-anchor="middle" font-size="12" fill={POS}>y₂</text>
+    <text x="270" y="165" text-anchor="middle" font-size="12" fill={POS}>y₃</text>
+    <text x="172" y="40" font-size="11" fill={MUTED}>w₁₁</text>
+    <text x="196" y="128" font-size="11" fill={MUTED}>w₃₂</text>
+    <text x="330" y="100" font-size="13" font-weight="700" fill={ACCENT}>y = Wx + b</text>
+  </svg>
+  <figcaption class="mt-1 text-center text-xs text-muted">Cada flecha es un peso w<sub>ij</sub>; juntos forman la matriz W de la capa.</figcaption>
+</figure>
+
+Los pesos de las flechas, ordenados, **son** la matriz $W$: la neurona $i$ calcula el producto punto de la fila $i$ con la entrada. Una [red profunda](/ml/deep-learning/) encadena estas capas (con una función no lineal entre ellas) — es decir, **compone transformaciones**, la operación de la sección anterior.
+
+Y los datos también son matrices. Una imagen en escala de grises es una tabla de números; explórala:
+
+<ImageMatrix client:visible />
+
+Guarda esta imagen en mente: en la [última lección](/algebra-lineal/pca-svd/) la **comprimiremos** descomponiendo su matriz en piezas ordenadas por importancia.
+
+<SectionComplete id="mat-ml" label="✓ Matrices en ML" />
+
+## Resumen
+
+- $A\vec x$ transforma el plano entero: lineal = rectas a rectas, origen fijo.
+- **Las columnas son los destinos de la base**, y $A\vec x$ es una combinación lineal de las columnas — la forma más rápida de leer una matriz.
+- El **determinante** es el factor de área: $\det < 0$ voltea, $\det = 0$ aplasta (y mata la inversa).
+- Multiplicar matrices = **componer** transformaciones; en general $AB \ne BA$.
+- Una capa de red neuronal es $W\vec x + \vec b$; una imagen es una matriz.
+
+En la [siguiente lección](/algebra-lineal/sistemas/) usamos las matrices al revés: dado el resultado $\vec b$, ¿qué vector $\vec x$ lo produce? Es decir: resolver $A\vec x = \vec b$.
