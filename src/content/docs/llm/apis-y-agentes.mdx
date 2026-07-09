@@ -1,0 +1,97 @@
+---
+title: APIs, herramientas y agentes de IA
+description: Cómo se integra un modelo en una aplicación real — la llamada HTTP, function calling para conectar datos verificables, y los agentes de IA que planifican, usan herramientas y piden aprobación humana.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ApiRequestFlow from '../../../components/llm/ApiRequestFlow.svelte';
+import FunctionCallingFlow from '../../../components/llm/FunctionCallingFlow.svelte';
+import AgentLoopSimulator from '../../../components/llm/AgentLoopSimulator.svelte';
+import PromptUpgradeChallenge from '../../../components/llm/PromptUpgradeChallenge.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="APIs, herramientas y agentes" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'llm5-api', label: 'La API', slug: 'hablar-con-el-modelo-por-api' },
+    { id: 'llm5-tools', label: 'Function calling', slug: 'function-calling-el-modelo-pide-ayuda' },
+    { id: 'llm5-agente', label: 'Agentes', slug: 'agentes-objetivo-plan-herramienta-observación' },
+    { id: 'llm5-reto', label: 'Actividad', slug: 'actividad-de-prompt-débil-a-prompt-fuerte' },
+    { id: 'llm5-cierre', label: 'Mensajes clave', slug: 'mensajes-clave' },
+  ]}
+/>
+
+Última lección del módulo: pasamos de *usar* un chat a *construir con* el modelo. La buena noticia: técnicamente, hablar con un LLM es una llamada HTTP como cualquier otra. La interesante: encadenarlo con herramientas y reglas lo convierte en un **agente**.
+
+## Hablar con el modelo por API
+
+Una **API** permite meter el modelo dentro de un dashboard, un proceso de datos o un flujo de negocio. El flujo completo: tu aplicación arma un request (endpoint + API key + mensajes + parámetros), lo envía, el modelo genera y la respuesta vuelve. Míralo viajar:
+
+<ApiRequestFlow client:visible />
+
+El experimento importante es el slider: la latencia total vive casi entera en los **tokens de salida** — otra razón (además del costo) para pedir respuestas concisas. Y el toggle de **streaming** explica por qué todos los chats muestran la respuesta palabra por palabra: el primer token llega temprano y la espera *percibida* se desploma, aunque el total sea igual.
+
+<Aside type="tip" title="Buenas prácticas desde el día uno">
+Guardar la API key fuera del código · no enviar datos confidenciales sin autorización · validar entradas y salidas · registrar errores (autenticación, límites de uso, exceso de tokens, red) · probar con casos simples antes de automatizar procesos importantes.
+</Aside>
+
+<SectionComplete id="llm5-api" label="✓ La API" />
+
+## Function calling: el modelo pide ayuda
+
+En la lección 4 viste el antídoto contra alucinaciones: darle datos al modelo. **Function calling** es ese antídoto industrializado: en lugar de pegar tablas a mano, defines funciones — `get_ventas(region, mes)` — y el modelo **decide cuándo necesita llamarlas**. Recorre la secuencia paso a paso:
+
+<FunctionCallingFlow client:visible />
+
+El paso 2 es el concepto que no debes olvidar: el modelo **escribe la llamada, no la ejecuta**. Emite un JSON estructurado con la función y sus argumentos; tu código decide *si* ejecutarlo, *cómo* y con qué permisos. El modelo interpreta y comunica; las herramientas consultan y calculan **bajo tu control**.
+
+En BI, las herramientas típicas: consultar ventas, obtener inventario, calcular márgenes, generar SQL para revisión, validar métricas contra el diccionario de datos.
+
+<SectionComplete id="llm5-tools" label="✓ Function calling" />
+
+## Agentes: objetivo, plan, herramienta, observación
+
+Un chatbot responde; un **agente** coordina un flujo de trabajo: recibe un objetivo, planifica, usa herramientas, observa los resultados y ajusta — en un loop — hasta cumplirlo. Ejecuta tú el escenario del reporte semanal, paso a paso:
+
+<AgentLoopSimulator client:visible />
+
+Fíjate en el momento clave: al llegar a `enviar_email`, el agente **se detiene y te pide aprobación** — porque esa herramienta no tiene permiso automático. Prueba ambas ramas: si rechazas, el agente no insiste; deja el borrador y termina. Eso no es una limitación del agente: **es su mejor característica de diseño**.
+
+Los componentes que acabas de ver son la definición completa: objetivo + modelo + instrucciones + herramientas + memoria de trabajo + validaciones + **supervisión humana**. Y los riesgos son los que imaginas: ejecutar acciones sin autorización, reportar datos incompletos, confundir hipótesis con hechos, correr sin monitoreo.
+
+<Aside type="caution">
+Un agente útil no es un modelo "más inteligente": es un sistema bien diseñado con permisos mínimos, acciones registradas, límites claros y aprobación humana para lo crítico.
+</Aside>
+
+<SectionComplete id="llm5-agente" label="✓ Agentes" />
+
+## Actividad: de prompt débil a prompt fuerte
+
+Cierre práctico. Toma el prompt débil de la lección 1 y conviértelo en uno de analista — el detector enciende cada ingrediente que logres incluir:
+
+<PromptUpgradeChallenge client:visible />
+
+Discusión para la clase: ¿qué podría inventar el modelo con el prompt débil? ¿Qué datos pediría un analista de BI antes de responder? ¿Y qué trabajo debería hacer la base de datos en lugar del LLM? (Respuesta: la base calcula métricas; el LLM explica, resume y comunica.)
+
+<SectionComplete id="llm5-reto" label="✓ Actividad" />
+
+## Mensajes clave
+
+Lo que te llevas de este módulo — el fundamento que sobrevive a cualquier modelo nuevo:
+
+1. **ChatGPT** es una aplicación; **GPT** una familia de modelos; **LLM** la categoría. GPT = *Generative Pre-trained Transformer*.
+2. Un LLM genera lenguaje **plausible** usando patrones, instrucciones y contexto — no garantiza verdad por sí solo.
+3. Los **transformers** (atención) hicieron a los modelos buenos en contexto y relaciones; la generación es token a token.
+4. Los **tokens** determinan costo, límites y velocidad; la **ventana de contexto** es memoria de trabajo finita.
+5. Un buen **prompt** define rol, contexto, datos, audiencia, formato y restricciones. Los **roles** (system/user/assistant/tool) permiten aplicaciones controladas.
+6. **Temperature** regula variabilidad, no exactitud.
+7. Las **alucinaciones** son el riesgo número uno en BI: toda respuesta se verifica contra datos confiables antes de decidir.
+8. **APIs** integran el modelo en dashboards y procesos; **function calling** conecta datos verificables bajo tu control.
+9. Un **agente** = modelo + objetivo + herramientas + reglas + supervisión humana.
+10. El mejor uso de IA en BI combina **automatización, criterio analítico y gobierno de datos** — y el criterio sigue siendo tuyo.
+
+<SectionComplete id="llm5-cierre" label="✓ Mensajes clave" />

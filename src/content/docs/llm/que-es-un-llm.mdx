@@ -1,0 +1,112 @@
+---
+title: ¿Qué es un LLM? De ChatGPT a los transformers
+description: Qué es ChatGPT, qué significa GPT, qué es un modelo de lenguaje, cómo genera texto una palabra a la vez y por qué la atención cambió todo — explicado para Business Intelligence, sin matemáticas.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import LlmLayers from '../../../components/llm/LlmLayers.svelte';
+import AttentionExplorer from '../../../components/llm/AttentionExplorer.svelte';
+import NextTokenPredictor from '../../../components/llm/NextTokenPredictor.svelte';
+import AmbiguityContext from '../../../components/llm/AmbiguityContext.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="¿Qué es un LLM?" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'llm1-bi', label: 'IA y BI', slug: 'la-ia-que-ya-usas-y-por-qué-importa-en-bi' },
+    { id: 'llm1-capas', label: 'ChatGPT, GPT y LLM', slug: 'chatgpt-gpt-y-llm-no-son-lo-mismo' },
+    { id: 'llm1-attn', label: 'El transformer', slug: 'el-transformer-atención-es-todo-lo-que-necesitas' },
+    { id: 'llm1-gen', label: 'Generación', slug: 'una-palabra-a-la-vez-generación-autorregresiva' },
+    { id: 'llm1-contexto', label: 'Contexto', slug: 'el-contexto-decide-el-significado' },
+  ]}
+/>
+
+Antes de escribir una sola línea de código o pagar un solo token, hay que entender **qué es** la cosa con la que vamos a trabajar. Esta lección separa tres palabras que se confunden todo el tiempo —ChatGPT, GPT y LLM—, muestra cómo un modelo *genera* texto y por qué eso importa (y a veces preocupa) cuando el texto habla de tus ventas.
+
+## La IA que ya usas (y por qué importa en BI)
+
+Business Intelligence convierte datos en decisiones: extraer, transformar, modelar, visualizar y comunicar. La IA generativa agrega una capa nueva sobre ese trabajo: **interactuar con datos y reportes usando lenguaje natural**.
+
+- Un gerente pregunta: *"¿Qué región tuvo mayor crecimiento este mes?"*
+- Un analista pide: *"Resume este dashboard para una reunión ejecutiva."*
+- Un usuario no técnico pregunta: *"¿Qué significa margen bruto y por qué cambió?"*
+
+Nada de esto elimina los dashboards, el modelado de datos ni el criterio analítico. El valor no está en que el modelo "escriba bonito": está en combinar **datos + contexto de negocio + comunicación clara + revisión humana**.
+
+<Aside type="caution" title="La idea central del curso">
+Un modelo de lenguaje **no reemplaza** el análisis de datos. Acelera tareas — pero el juicio analítico, la validación de datos y la interpretación de negocio siguen siendo responsabilidad humana.
+</Aside>
+
+<SectionComplete id="llm1-bi" label="✓ IA y BI" />
+
+## ChatGPT, GPT y LLM no son lo mismo
+
+Tres palabras, tres capas distintas. Toca cada anillo:
+
+<LlmLayers client:visible />
+
+La sigla **GPT** resume las tres ideas que estudiaremos:
+
+- **G — Generative**: el modelo *genera* contenido nuevo (redacta, resume, explica, escribe código). No busca una respuesta guardada: la produce.
+- **P — Pre-trained**: fue *pre-entrenado* con enormes cantidades de texto **antes** de que tú lo uses. Ahí aprendió patrones del lenguaje — pero **no** conoce los datos de tu empresa ni tiene acceso automático a tus dashboards: esa información hay que dársela.
+- **T — Transformer**: la arquitectura que hizo posible el salto de calidad. La vemos en la siguiente sección.
+
+<Aside type="note">
+Cuando escribes "Explícame qué es un KPI" en ChatGPT, usas una **aplicación** que envía tu solicitud a un **modelo** (GPT), que pertenece a la categoría **LLM**. Una base de datos responde con registros; un dashboard visualiza métricas; un LLM **genera lenguaje**. Una solución profesional combina las tres cosas — pero cada una cumple una función diferente.
+</Aside>
+
+<SectionComplete id="llm1-capas" label="✓ ChatGPT, GPT y LLM" />
+
+## El transformer: atención es todo lo que necesitas
+
+Antes de 2017, los modelos de lenguaje batallaban con las relaciones entre palabras lejanas dentro de un texto. Los **transformers** cambiaron eso con un mecanismo llamado **atención**: cada palabra "mira" a todas las demás y decide cuáles le importan para interpretarse a sí misma.
+
+No hace falta ninguna fórmula para *verlo*. Pasa el cursor por cada palabra:
+
+<AttentionExplorer client:visible />
+
+Prueba la oración **"Contraste en BI"** y enfoca la palabra *mejoró*: atiende a *margen* (su sujeto) y a *pero* (el contraste). Por eso un transformer puede entender que **la utilidad puede mejorar aunque las ventas bajen** — detectar la palabra negativa "bajaron" no basta, y un buen análisis tampoco se queda ahí.
+
+<Aside type="tip">
+Esto es todo lo que necesitas saber de la arquitectura por ahora. La mecánica interna (queries, keys, values y su matemática) se estudia en la lección de <a href="/ml/recurrent-neural-networks/#atención">atención del curso de Deep Learning</a>.
+</Aside>
+
+<SectionComplete id="llm1-attn" label="✓ El transformer" />
+
+## Una palabra a la vez: generación autorregresiva
+
+Un LLM no redacta la respuesta completa de golpe. Responde **una sola pregunta, miles de veces seguidas**: *"dado todo lo anterior, ¿cuál es el siguiente token más probable?"*. Cada token elegido pasa a formar parte del contexto y la pregunta se repite.
+
+Genera tú la frase — elige cada token, muestrea al azar o deja el piloto automático:
+
+<NextTokenPredictor client:visible />
+
+Fíjate en dos cosas. Primero, **el modelo nunca "sabe" la respuesta completa**: solo ve probabilidades del siguiente paso. Segundo, todas las frases resultantes *suenan* razonables — *"las ventas crecieron un 12% frente al mes anterior"*, *"cayeron un 8% respecto a la meta"* — y sin datos reales, **ninguna es verdadera**. Producir texto plausible es exactamente lo que hace un LLM; convertir lo plausible en confiable requiere datos, validación y criterio.
+
+<SectionComplete id="llm1-gen" label="✓ Generación" />
+
+## El contexto decide el significado
+
+Entender lenguaje no es reconocer palabras: es interpretar **contexto, intención y ambigüedad**. La oración *"Marta vio a Ana con el telescopio"* tiene dos lecturas — ¿quién tenía el telescopio? Dale contexto al modelo y observa cómo la atención cambia de destino:
+
+<AmbiguityContext client:visible />
+
+En BI esto pasa a diario: *"las ventas bajaron en el norte, pero el margen mejoró"* es una mala noticia o una buena estrategia **según el contexto** que acompañe al dato. Y una pregunta sin contexto — *"explícame por qué bajaron las ventas"* — invita al modelo a **inventar** causas plausibles, porque no le diste período, región, producto ni datos de referencia.
+
+<Aside type="caution">
+Regla práctica: si tú no podrías responder la pregunta con la información dada, **el modelo tampoco** — la diferencia es que él responderá de todos modos. En las próximas lecciones aprenderemos a darle el contexto correcto (y a limitar lo que puede afirmar).
+</Aside>
+
+<SectionComplete id="llm1-contexto" label="✓ Contexto" />
+
+## Resumen
+
+- **ChatGPT** es la aplicación, **GPT** la familia de modelos, **LLM** la categoría general.
+- **GPT** = *Generative Pre-trained Transformer*: genera texto nuevo, fue pre-entrenado antes de que lo uses, y su arquitectura es el transformer.
+- La **atención** permite que cada palabra mire a las demás y capture relaciones — incluso contrastes como "bajaron… pero mejoró".
+- La generación es **autorregresiva**: un token a la vez, cada uno condicionado por los anteriores.
+- Un LLM produce respuestas **plausibles**, no verificadas. El contexto y los datos los pones tú.

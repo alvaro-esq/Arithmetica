@@ -1,0 +1,88 @@
+---
+title: Alucinaciones, verificación y ecosistema
+description: Por qué un modelo puede inventar respuestas con total seguridad, cómo montar una rutina de verificación para BI, y un mapa de la evolución de los modelos y sus proveedores.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import HallucinationDemo from '../../../components/llm/HallucinationDemo.svelte';
+import VerificationTriage from '../../../components/llm/VerificationTriage.svelte';
+import ModelTimeline from '../../../components/llm/ModelTimeline.svelte';
+import EcosystemMap from '../../../components/llm/EcosystemMap.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="Alucinaciones y ecosistema" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'llm4-halluc', label: 'Alucinaciones', slug: 'alucinaciones-seguro-no-es-lo-mismo-que-correcto' },
+    { id: 'llm4-verify', label: 'Verificación', slug: 'verificar-antes-de-confiar' },
+    { id: 'llm4-evo', label: 'Evolución', slug: 'de-gpt-1-a-hoy-la-evolución-de-los-modelos' },
+    { id: 'llm4-eco', label: 'Ecosistema', slug: 'el-ecosistema-quién-es-quién' },
+  ]}
+/>
+
+Esta es la lección más importante del curso para tu carrera en BI. Un modelo que redacta bonito y **se equivoca con seguridad** es más peligroso que uno que no responde — porque sus errores viajan directo a reportes ejecutivos y decisiones comerciales.
+
+## Alucinaciones: seguro no es lo mismo que correcto
+
+Una **alucinación** es información incorrecta o inventada presentada con apariencia de total seguridad. No es un "bug" raro: es la consecuencia natural de lo que viste en la lección 1 — el modelo completa patrones. Si el patrón es "respuesta de analista", lo completará **con o sin datos**:
+
+<HallucinationDemo client:visible />
+
+Corre el modo **Sin datos** y pulsa *Verificar*: el 27.4%, el "récord histórico", la causa — todo inventado, nada dudoso en el tono. Luego cambia a **Con datos**: la misma pregunta produce una respuesta anclada a la tabla, y cuando el dato no está, lo dice. La diferencia no fue el modelo: fue **el contexto que tú controlas**.
+
+Las causas comunes de alucinación son detectables de antemano: falta de datos, preguntas ambiguas, instrucciones demasiado abiertas, información contradictoria, conocimiento desactualizado y la presión implícita de "responde algo".
+
+<Aside type="caution">
+En BI, una respuesta debe ser <strong>clara, útil y verificable</strong>. Si no puede verificarse, se trata como hipótesis — nunca como conclusión.
+</Aside>
+
+<SectionComplete id="llm4-halluc" label="✓ Alucinaciones" />
+
+## Verificar antes de confiar
+
+"Desconfía de todo" no es una rutina operativa. La rutina real es saber **qué tipo de afirmación tienes enfrente y dónde se verifica**. Clasifica el mazo:
+
+<VerificationTriage client:visible />
+
+Esa es la disciplina completa: **cifras internas** → contra la base de datos; **causas y datos externos** → exigir fuente o marcarlos como hipótesis; **definiciones y aritmética visible** → adelante. Complementa con las instrucciones de la lección 3: *"distingue hechos confirmados, inferencias razonables y datos faltantes"*.
+
+<SectionComplete id="llm4-verify" label="✓ Verificación" />
+
+## De GPT-1 a hoy: la evolución de los modelos
+
+No hace falta memorizar versiones — importa la **dirección** del avance: completar texto → conversar → seguir instrucciones → multimodal → usar herramientas → agentes. Recorre la línea de tiempo:
+
+<ModelTimeline client:visible />
+
+Cambia el eje a **ventana de contexto** y mira la escala logarítmica: de 512 tokens a un millón en seis años. Cada salto de ventana cambió lo que es posible en BI — de "resume este párrafo" a "analiza este reporte anual completo".
+
+<Aside type="note">
+Por esto el curso insiste en fundamentos: quien entiende tokens, contexto, prompts y verificación se adapta a cualquier modelo nuevo. Quien solo memorizó "usa el modelo X" queda obsoleto con cada lanzamiento.
+</Aside>
+
+<SectionComplete id="llm4-evo" label="✓ Evolución" />
+
+## El ecosistema: quién es quién
+
+ChatGPT es la herramienta más conocida, no la única — y **no existe "el mejor modelo" en absoluto**: existe el mejor modelo *para tu caso de uso, tu presupuesto y tus requisitos de privacidad*. Filtra por lo que importa:
+
+<EcosystemMap client:visible />
+
+Tres decisiones típicas en BI: clasificar miles de comentarios simples → modelo económico y rápido; analizar un documento complejo para redactar una explicación ejecutiva → modelo avanzado; empresa con requisitos estrictos de privacidad → pesos abiertos alojados en casa, aunque pierdas algo de calidad.
+
+<Aside type="tip">
+Este mapa caduca cada seis meses — los <strong>criterios</strong> del desplegable no. Elegir modelo es una decisión técnica <em>y</em> de negocio: nunca se decide por popularidad.
+</Aside>
+
+<SectionComplete id="llm4-eco" label="✓ Ecosistema" />
+
+## Resumen
+
+- Una alucinación es un invento con tono de certeza; la fluidez **no** es evidencia.
+- El antídoto es doble: dar datos (grounding) + instrucciones que obliguen a declarar límites.
+- Rutina de triage: cifras → base de datos; causas/externos → fuente; definiciones → seguro.
+- Los modelos evolucionan rápido y en una dirección clara; los fundamentos y los criterios de selección permanecen.

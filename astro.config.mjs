@@ -24,6 +24,27 @@ export default defineConfig({
             href: "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css",
           },
         },
+        // Fraunces: display serif for the landing title and lesson H1s (editorial
+        // "living textbook" feel). Loaded via CDN, same pattern as KaTeX above.
+        {
+          tag: "link",
+          attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "preconnect",
+            href: "https://fonts.gstatic.com",
+            crossorigin: true,
+          },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "stylesheet",
+            href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&display=swap",
+          },
+        },
       ],
       customCss: ["./src/styles/global.css"],
       // Light-only: the site is "paper"-first (Ink & Copper) and only themes the
@@ -73,6 +94,18 @@ export default defineConfig({
           collapsed: false,
           items: [
             { label: "Introducción a Reinforcement Learning", link: "ml/reinforcement-learning/" },
+          ],
+        },
+        {
+          label: "Fundamentos de LLM y Agentes de IA",
+          collapsed: false,
+          items: [
+            { label: "El curso de IA", link: "llm/" },
+            { label: "¿Qué es un LLM?", link: "llm/que-es-un-llm/" },
+            { label: "Tokens, costos y contexto", link: "llm/tokens-costos-y-contexto/" },
+            { label: "Prompts, roles y temperature", link: "llm/prompts-roles-y-temperature/" },
+            { label: "Alucinaciones y ecosistema", link: "llm/alucinaciones-y-ecosistema/" },
+            { label: "APIs, herramientas y agentes", link: "llm/apis-y-agentes/" },
           ],
         },
       ],

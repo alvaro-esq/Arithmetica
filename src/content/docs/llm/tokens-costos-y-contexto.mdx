@@ -1,0 +1,102 @@
+---
+title: Tokens, costos y ventana de contexto
+description: Cómo "lee" texto un modelo de lenguaje, por qué cada token cuesta dinero, cómo estimar el costo de una solución y qué pasa cuando la conversación ya no cabe en la ventana de contexto.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TokenizerPlayground from '../../../components/llm/TokenizerPlayground.svelte';
+import TokenEstimateQuiz from '../../../components/llm/TokenEstimateQuiz.svelte';
+import CostCalculator from '../../../components/llm/CostCalculator.svelte';
+import ContextWindowViz from '../../../components/llm/ContextWindowViz.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="Tokens, costos y contexto" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'llm2-tokens', label: 'Tokens', slug: 'el-modelo-no-lee-letras-lee-tokens' },
+    { id: 'llm2-quiz', label: 'Desafío', slug: 'desafío-estima-los-tokens' },
+    { id: 'llm2-costos', label: 'Costos', slug: 'cada-token-cuesta-dinero' },
+    { id: 'llm2-ventana', label: 'Ventana de contexto', slug: 'la-ventana-de-contexto-la-memoria-tiene-límite' },
+  ]}
+/>
+
+En la lección anterior vimos que un LLM genera texto token a token. Ahora toca la parte que afecta directamente tu presupuesto y el diseño de tus soluciones: **qué es exactamente un token, cuánto cuesta y cuántos caben**.
+
+## El modelo no lee letras: lee tokens
+
+Una persona ve palabras completas. Un modelo trabaja con **tokens**: fragmentos codificados que pueden ser una palabra completa, un pedazo de palabra, un número, un signo o un espacio. Escribe lo que quieras y compara cómo lo lees tú con cómo lo "lee" el modelo:
+
+<TokenizerPlayground client:visible />
+
+Tres comportamientos que conviene grabarse:
+
+- Las **palabras frecuentes** ("ventas", "margen", "región") suelen ser un solo token.
+- Las **palabras largas o raras** se parten en varios pedazos — *internacionalización* cuesta 4 tokens.
+- Los **números se fragmentan**: una tabla con muchas cifras consume muchos más tokens de lo que aparenta a simple vista. `1,250,000` son cinco tokens.
+
+<Aside type="note">
+Por eso en IA aplicada a BI **no gana el prompt más largo**: gana el que entrega el contexto correcto sin ruido. Cada palabra irrelevante que incluyes es costo, espacio de ventana perdido y una distracción potencial para el modelo.
+</Aside>
+
+<SectionComplete id="llm2-tokens" label="✓ Tokens" />
+
+## Desafío: estima los tokens
+
+Antes de diseñar prompts a diario, calibra tu intuición. En español, **1 token ≈ 3–4 caracteres**. Apuesta y comprueba:
+
+<TokenEstimateQuiz client:visible />
+
+Fíjate en el texto de KPIs: es el más corto en apariencia y de los más caros por carácter — siglas y cifras se fragmentan mucho. La regla *caracteres ÷ 3.5* es suficiente para presupuestar de cabeza.
+
+<SectionComplete id="llm2-quiz" label="✓ Desafío" />
+
+## Cada token cuesta dinero
+
+Las APIs cobran por uso, separando dos medidores: **tokens de entrada** (todo lo que envías: instrucciones, datos, historial) y **tokens de salida** (todo lo que el modelo genera). La salida suele costar **3–5× más** que la entrada:
+
+```text
+Costo ≈ (tokens de entrada / 1,000,000 × precio de entrada por millón)
+      + (tokens de salida  / 1,000,000 × precio de salida por millón)
+```
+
+Con 800 tokens de entrada a USD 0.50 por millón y 200 de salida a USD 2.00 por millón, una consulta cuesta USD 0.0008 — parece nada, hasta que la ejecutas 100,000 veces: **USD 80**. El costo real de una solución lo deciden el volumen y el diseño, no solo el modelo. Compruébalo:
+
+<CostCalculator client:visible />
+
+El preset carga el ejemplo clásico: alguien pregunta *"¿cuál fue la venta total de ayer?"* y la aplicación manda la tabla completa de 50,000 filas (escenario A) en lugar de dejar que la base de datos calcule la métrica y enviar solo el resultado (escenario B). **Misma respuesta para el usuario, más de 500 veces de diferencia en costo.**
+
+<Aside type="tip" title="Buenas prácticas de costo">
+Enviar solo lo necesario · limitar la longitud de la respuesta · usar modelos económicos para tareas simples y reservar los avanzados para las complejas · medir costo por consulta y por usuario · probar en pequeño antes de escalar. Los precios del simulador son educativos: los reales cambian por proveedor y por modelo.
+</Aside>
+
+<SectionComplete id="llm2-costos" label="✓ Costos" />
+
+## La ventana de contexto: la memoria tiene límite
+
+La **ventana de contexto** es todo lo que el modelo puede considerar en una solicitud: instrucciones, mensajes anteriores, tus tablas y la respuesta que va a generar. Es su *memoria de trabajo* — y es finita. Cuando la conversación crece, **lo más viejo se cae**:
+
+<ContextWindowViz client:visible />
+
+Envía los mensajes uno a uno con la ventana **Pequeña** y observa el momento exacto en que el dato clave (la meta de junio) sale de la ventana. La pregunta final — *"¿llegamos a la meta que te di al inicio?"* — falla, y el modelo ni siquiera sabe que alguna vez tuvo ese dato.
+
+Dos lecciones de diseño salen de aquí:
+
+- **La ventana no es memoria permanente.** Que algo se haya dicho antes no garantiza que siga disponible ni que el modelo lo use bien.
+- Antes de enviar información, pregúntate: *¿qué información **mínima** necesita el modelo para responder bien?* Para "¿qué producto creció más en junio?" no necesita cinco años de historia — necesita ventas por producto de mayo y junio.
+
+<Aside type="caution">
+El mensaje <strong>system</strong> del visualizador está "anclado": las aplicaciones reales lo re-envían siempre. Esa es la solución general — los datos críticos no se confían a la conversación: se <strong>re-inyectan</strong> en cada solicitud.
+</Aside>
+
+<SectionComplete id="llm2-ventana" label="✓ Ventana de contexto" />
+
+## Resumen
+
+- Un token es la unidad real de procesamiento: ~3–4 caracteres en español; palabras raras y números se fragmentan.
+- El costo se mide en tokens de entrada + salida; la salida es más cara. El volumen multiplica todo.
+- El diseño de la solución (qué calculas en la base vs qué mandas al modelo) importa más que el precio del modelo.
+- La ventana de contexto es memoria de trabajo finita: lo viejo se cae, y los datos críticos se re-inyectan.

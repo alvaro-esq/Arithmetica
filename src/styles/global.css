@@ -23,6 +23,9 @@
     --dur-fast: 150ms;
     --dur: 220ms;
 
+    /* Display serif (Fraunces, loaded in astro.config.mjs head) for hero + H1s */
+    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+
     /* Starlight accent maps to the ink-blue */
     --sl-color-accent: var(--c-accent);
     --sl-color-accent-high: var(--c-accent-soft);
@@ -432,6 +435,55 @@
 /* Docs pagination is meaningless on the landing splash — hide it. */
 .sl-container > footer .pagination-links {
   display: none;
+}
+
+/* ---- Fix: "Presentar" button unclickable over the right sidebar ----
+   Starlight's .right-sidebar is a `position:fixed; height:100vh` panel spanning
+   the whole right column; its empty lower area sits ON TOP of the fixed
+   .deck-launch button (bottom-right), swallowing the click even though the
+   button paints above it. Rather than punch pointer-events holes in the
+   sidebar's scroll container (which would kill scrollbar-drag on a long TOC),
+   we move the launcher OUT from under the sidebar: shift it left by the sidebar
+   column width so it floats over the content pane, where nothing overlaps it.
+   Below the sidebar breakpoint the sidebar isn't fixed, so no offset is needed. */
+@media (min-width: 72rem) {
+  .deck-launch {
+    right: calc(var(--sl-sidebar-width, 18.75rem) + 1.25rem);
+  }
+}
+
+/* ---- Display-serif titles (Fraunces) — editorial "living textbook" feel ----
+   Unlayered so they win over Starlight's layered defaults without !important. */
+
+/* Landing hero title "Arithmetica": serif, ink base color. The gradient fill is
+   applied only where background-clip:text is supported (@supports), so on any
+   engine that lacks it the title stays solid ink instead of turning invisible. */
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--c-ink);
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero h1 {
+    background: linear-gradient(135deg, var(--c-ink) 20%, var(--c-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Lesson topic H1 (Starlight page title, id="_top" inside .content-panel):
+   bigger, serif, ink — reads like a chapter heading. The `:not([data-page-title])`
+   guard excludes the landing hero title, which Starlight ALSO renders as
+   `h1#_top` inside a .content-panel but marks with data-page-title. */
+.content-panel h1#_top:not([data-page-title]) {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.4rem + 2vw, 2.9rem);
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  color: var(--c-ink);
 }
 
 /* ---- Reduced motion: neutralize all animation/transition globally ---- */
