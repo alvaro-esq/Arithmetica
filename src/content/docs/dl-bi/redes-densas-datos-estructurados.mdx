@@ -1,0 +1,120 @@
+---
+title: Redes Densas y Deep Learning para Datos Estructurados
+description: El perceptrón multicapa aplicado a los datos tabulares del negocio — churn, riesgo y segmentación —, la preparación de datos, el control de la capacidad del modelo y la evaluación de resultados en términos de costos e interpretación.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import MlpForwardPass from '../../../components/dlbi/MlpForwardPass.svelte';
+import FeatureScaling from '../../../components/dlbi/FeatureScaling.svelte';
+import WideAndDeep from '../../../components/adv/WideAndDeep.svelte';
+import ChurnThreshold from '../../../components/dlbi/ChurnThreshold.svelte';
+import FeatureImportance from '../../../components/dt/FeatureImportance.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="Redes Densas para Datos Estructurados" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'dlbi2-mlp', label: 'El MLP', slug: 'el-perceptrón-multicapa-la-arquitectura-densa' },
+    { id: 'dlbi2-norm', label: 'Normalización', slug: 'preparar-los-datos-normalización' },
+    { id: 'dlbi2-capacidad', label: 'Capacidad', slug: 'capacidad-del-modelo-regularización-y-dropout' },
+    { id: 'dlbi2-evaluacion', label: 'Evaluación', slug: 'del-puntaje-a-la-decisión-evaluar-un-modelo-de-churn' },
+    { id: 'dlbi2-explicabilidad', label: 'Explicabilidad', slug: 'explicabilidad-qué-mira-el-modelo' },
+  ]}
+/>
+
+La lección anterior presentó cómo funciona una red neuronal. Esta la pone a trabajar sobre el material del que está hecho el BI: **datos estructurados** — tablas de clientes, transacciones y productos. El recorrido sigue el ciclo completo de un proyecto real: arquitectura, preparación de datos, control del sobreajuste, evaluación en términos de costos y justificación del modelo ante el negocio.
+
+## El perceptrón multicapa: la arquitectura densa
+
+La arquitectura estándar para datos tabulares es el **perceptrón multicapa** (MLP): capas **densas** en las que cada neurona se conecta con todas las de la capa anterior. Cada fila de la tabla —un cliente, una transacción— entra como vector de variables; cada capa la transforma; la última capa entrega el resultado: una probabilidad, una categoría o un número.
+
+La red que usted ya manipuló es exactamente eso, un MLP de una capa oculta leyendo la ficha de un cliente:
+
+<MlpForwardPass client:visible />
+
+Sobre esta misma plantilla se resuelven los problemas tabulares típicos del negocio, cambiando solo la salida y los datos de entrenamiento:
+
+- **Abandono de clientes (churn)**: entrada, la ficha del cliente; salida, probabilidad de abandonar. Clasificación binaria.
+- **Riesgo crediticio**: historial y comportamiento de pago; salida, probabilidad de impago.
+- **Predicción de demanda**: precios, promociones, estacionalidad; salida, unidades esperadas. Regresión.
+- **Segmentación de clientes**: la red aprende representaciones intermedias que agrupan clientes con comportamiento similar, más ricas que las variables originales.
+
+<Aside type="note" title="Qué arquitectura para qué problema">
+El MLP denso es el punto de partida para cualquier tabla. Cuando las interacciones entre variables categóricas dominan el problema (recomendación, propensión de compra), existen arquitecturas tabulares especializadas — <a href="/ml/advanced-architectures/#wide--deep">Wide &amp; Deep y derivadas</a> — que combinan memorización y generalización.
+</Aside>
+
+<SectionComplete id="dlbi2-mlp" label="✓ El MLP" />
+
+## Preparar los datos: normalización
+
+Las tablas de negocio mezclan escalas sin ningún pudor: ingresos mensuales en decenas de miles de quetzales junto a antigüedad en años y número de quejas en unidades. Para el descenso de gradiente esa disparidad es un problema geométrico: la superficie de pérdida se convierte en un **valle alargado**, y el mismo algoritmo que avanzaría en línea recta se dedica a rebotar entre las paredes.
+
+**Normalizar** —llevar todas las variables a una escala comparable, por ejemplo media 0 y desviación 1— redondea el valle. Compare el mismo descenso, con la misma tasa de aprendizaje, sobre datos crudos y normalizados:
+
+<FeatureScaling client:visible />
+
+El resultado no es cosmético: con datos crudos el entrenamiento converge en más del doble de pasos, y con una tasa de aprendizaje apenas mayor directamente diverge. En la práctica, la normalización es la diferencia entre una red que entrena de forma estable y una que parece "no funcionar".
+
+<Aside type="tip" title="Normalice con estadísticas del conjunto de entrenamiento">
+La media y la desviación se calculan **solo con los datos de entrenamiento** y se aplican tal cual a validación y producción. Calcularlas con todos los datos filtra información del conjunto de validación hacia el modelo (*fuga de datos*) y produce métricas optimistas que no se sostienen en producción.
+</Aside>
+
+<SectionComplete id="dlbi2-norm" label="✓ Normalización" />
+
+## Capacidad del modelo, regularización y dropout
+
+La **capacidad** de una red —cuántas capas y neuronas tiene— determina cuán complejas pueden ser las fronteras que dibuja. La lección anterior mostró el síntoma en las curvas de entrenamiento; aquí se ve la tensión de fondo: **memorizar** patrones exactos del pasado o **generalizar** tendencias que se sostienen en datos nuevos. Alterne entre los modos *Wide* (memoriza reglas explícitas sobre cruces de variables), *Deep* (una red densa que generaliza una frontera suave) y *Wide + Deep*, y desactive los cruces de features para ver qué pierde la memorización:
+
+<WideAndDeep client:visible />
+
+Ninguno de los dos extremos basta por sí solo: la memorización pura reproduce reglas del pasado pero no se extiende a casos que no ha visto, y la generalización pura pasa por alto patrones que sí se repiten. Una red con capacidad de sobra y sin control se inclina al primer extremo — clasifica perfecto el pasado y falla el futuro. Los mecanismos de control ya los conoce por nombre: **regularización** (penalizar pesos grandes), **early stopping** (detenerse en el mínimo de validación) y **dropout**, la técnica insignia de las redes: durante el entrenamiento se "apagan" neuronas al azar en cada paso, de modo que ninguna pueda volverse imprescindible y la red se vea obligada a aprender lecturas redundantes y robustas. En datos tabulares, un dropout moderado en las capas ocultas es una de las defensas más efectivas contra el sobreajuste.
+
+<Aside type="note">
+La geometría de L1 y L2, el dropout como ensamble implícito y batch normalization se desarrollan con detalle en <a href="/ml/optimization/#regularización">Regularización y Optimización</a>.
+</Aside>
+
+<SectionComplete id="dlbi2-capacidad" label="✓ Capacidad" />
+
+## Del puntaje a la decisión: evaluar un modelo de churn
+
+El modelo entrega puntajes; el negocio necesita decisiones. Entre ambos hay un **umbral**: a partir de qué puntaje se trata a un cliente como riesgo de abandono. Y elegirlo no es una pregunta matemática sino de **costos asimétricos**: la oferta de retención cuesta USD 20 por cliente contactado; cada cliente que se va sin ser detectado cuesta USD 200.
+
+Arrastre el umbral y observe la matriz de confusión, las métricas y el costo total. Después compare su elección con el umbral de menor costo:
+
+<ChurnThreshold client:visible />
+
+Tres observaciones valen el precio de la lección. Primero, la **exactitud** (accuracy) es engañosa: con 75 % de clientes fieles, un "modelo" que nunca predice abandono acierta el 75 % — y pierde a todos los que se van. Segundo, **precisión y recall** cuentan las dos historias que importan: de los contactados, cuántos de verdad iban a irse; de los que iban a irse, cuántos detectamos. Tercero, el umbral óptimo casi nunca es 0.5: con estos costos conviene aceptar bastantes ofertas "de más" (falsos positivos baratos) con tal de no dejar ir clientes (falsos negativos caros).
+
+<Aside type="caution" title="Clases desbalanceadas">
+El abandono, el fraude y el impago son minoritarios por naturaleza, y con clases desbalanceadas la exactitud pierde casi todo su valor informativo. El tratamiento completo del problema —métricas, umbrales y detección— está en <a href="/ml/anomaly-detection/">Detección de Anomalías</a>.
+</Aside>
+
+<SectionComplete id="dlbi2-evaluacion" label="✓ Evaluación" />
+
+## Explicabilidad: qué mira el modelo
+
+Un modelo que nadie puede explicar difícilmente sobrevive al comité que aprueba su despliegue — y en dominios regulados (crédito, seguros) la explicación es un requisito, no una cortesía. La herramienta más directa es la **importancia de variables**: medir cuánto contribuye cada variable a las predicciones del modelo.
+
+El experimento siguiente entrena con una variable de **ruido puro** incluida a propósito. Observe cómo el método le asigna una importancia que tiende a cero — evidencia de que la medición distingue señal de casualidad:
+
+<FeatureImportance client:visible />
+
+En un caso de churn real, este análisis responde la pregunta que hará el negocio: *¿por qué el modelo señala a estos clientes?* — "las quejas recientes y la caída de uso pesan tres veces más que la antigüedad" es una respuesta que un gerente puede auditar, discutir y convertir en acción (mejorar el proceso de quejas), cosa que un puntaje opaco no permite.
+
+<Aside type="tip" title="Importancia no es causalidad">
+Que una variable pese en la predicción no demuestra que la cause: puede ser un síntoma correlacionado. Antes de intervenir sobre una variable ("reduzcamos las quejas y bajará el churn"), la hipótesis causal debe validarse con experimentos o conocimiento del dominio.
+</Aside>
+
+<SectionComplete id="dlbi2-explicabilidad" label="✓ Explicabilidad" />
+
+## Resumen
+
+- El **perceptrón multicapa** (capas densas) es la arquitectura estándar para datos tabulares: churn, riesgo, demanda y segmentación comparten la misma plantilla.
+- **Normalizar** las variables redondea la superficie de pérdida: el mismo descenso converge en la mitad de los pasos y deja de diverger — siempre con estadísticas del conjunto de entrenamiento.
+- La **capacidad** se controla con regularización, early stopping y **dropout** (apagar neuronas al azar para forzar redundancia).
+- La evaluación de negocio ocurre en el **umbral**: matriz de confusión, precisión y recall, y costos asimétricos deciden dónde cortar — la exactitud sola engaña con clases desbalanceadas.
+- La **importancia de variables** hace auditable el modelo; importancia no implica causalidad.

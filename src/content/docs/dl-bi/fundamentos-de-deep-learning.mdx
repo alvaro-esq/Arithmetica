@@ -1,0 +1,135 @@
+---
+title: Fundamentos de Deep Learning y Redes Neuronales
+description: Qué es Deep Learning y por qué es relevante para Business Intelligence, en qué se diferencia de los modelos tradicionales, cómo funciona una red neuronal por dentro y cómo se lee un entrenamiento — explicado de forma conceptual e interactiva.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import PerceptronBoundary from '../../../components/dl/PerceptronBoundary.svelte';
+import ActivationExplorer from '../../../components/optim/ActivationExplorer.svelte';
+import GradientDescent from '../../../components/dl/GradientDescent.svelte';
+import MlpForwardPass from '../../../components/dlbi/MlpForwardPass.svelte';
+import TrainingCurves from '../../../components/dlbi/TrainingCurves.svelte';
+import LessonProgress from '../../../components/ui/LessonProgress.svelte';
+import SectionComplete from '../../../components/ui/SectionComplete.svelte';
+import PresentMode from '../../../components/ui/PresentMode.svelte';
+
+<PresentMode client:load title="Fundamentos de Deep Learning" />
+
+<LessonProgress
+  title="En esta lección"
+  sections={[
+    { id: 'dlbi1-intro', label: 'DL y BI', slug: 'por-qué-deep-learning-en-business-intelligence' },
+    { id: 'dlbi1-tradicional', label: 'Tradicional vs DL', slug: 'modelos-tradicionales-frente-a-deep-learning' },
+    { id: 'dlbi1-neurona', label: 'La neurona', slug: 'la-neurona-artificial-pesos-sesgo-y-capas-ocultas' },
+    { id: 'dlbi1-activacion', label: 'Activación', slug: 'funciones-de-activación' },
+    { id: 'dlbi1-gradiente', label: 'Aprender', slug: 'aprender-es-minimizar-pérdida-y-descenso-de-gradiente' },
+    { id: 'dlbi1-curvas', label: 'Validación', slug: 'entrenamiento-validación-y-sobreajuste' },
+  ]}
+/>
+
+Deep Learning dejó de ser un tema exclusivo de laboratorios de investigación: hoy sostiene sistemas de predicción de demanda, detección de fraude y motores de recomendación que las áreas de Business Intelligence consumen a diario. Esta lección presenta los fundamentos —qué es, en qué se diferencia de los modelos tradicionales y cómo aprende una red neuronal— sin exigir la matemática del curso técnico, pero sin renunciar al rigor: cada concepto se puede manipular y comprobar en pantalla.
+
+## ¿Por qué Deep Learning en Business Intelligence?
+
+**Deep Learning** es la familia de modelos de aprendizaje automático construidos con **redes neuronales de varias capas**. Su rasgo distintivo no es la complejidad, sino una capacidad concreta: aprenden por sí mismos las representaciones intermedias de los datos, en lugar de depender de que un analista las diseñe a mano.
+
+Para un perfil de BI, su relevancia se concentra en cuatro frentes:
+
+- **Predicción**: demanda por producto y región, ingresos del próximo trimestre, probabilidad de impago de un cliente.
+- **Clasificación**: clientes con riesgo de abandono, transacciones sospechosas de fraude, tickets de soporte por categoría.
+- **Automatización**: lectura de documentos, clasificación de correos, extracción de campos de facturas — tareas repetitivas que antes exigían revisión manual.
+- **Soporte a decisiones**: puntajes que priorizan a quién llamar, qué inventario reponer o qué alerta investigar primero. El modelo no decide: ordena la evidencia para que decida una persona.
+
+<Aside type="note" title="Alcance y limitaciones">
+Deep Learning **no** es la herramienta por defecto. Exige volúmenes de datos considerables, capacidad de cómputo y cuidado contra el sobreajuste; sus predicciones son más difíciles de explicar que las de un modelo simple; y en datos tabulares pequeños —el caso más frecuente en BI— un modelo clásico bien ajustado suele rendir igual o mejor con una fracción del costo. El criterio profesional consiste en saber cuándo usarlo y cuándo no.
+</Aside>
+
+<SectionComplete id="dlbi1-intro" label="✓ DL y BI" />
+
+## Modelos tradicionales frente a Deep Learning
+
+Un modelo tradicional —una regresión lineal, un árbol de decisión— trabaja con las variables tal como se las entregan. Si la relación entre variables y respuesta es directa, esto basta. La diferencia conceptual aparece cuando la relación es **no lineal y compuesta**: ahí el modelo tradicional necesita que alguien construya las variables derivadas correctas (*feature engineering*), mientras que una red profunda las **aprende como parte del entrenamiento**.
+
+El caso mínimo que exhibe esa frontera es un modelo lineal intentando separar dos clases. Ajuste los pesos e intente resolver cada compuerta; observe qué ocurre con XOR:
+
+<PerceptronBoundary client:visible />
+
+AND, OR y NAND se resuelven con una línea recta. **XOR no**: ninguna combinación de pesos alcanza el 100 % porque ninguna línea separa esas clases. Es el ejemplo canónico de un patrón que exige **componer** condiciones ("uno u otro, pero no ambos") — exactamente lo que las capas ocultas de una red aportan y un modelo lineal no puede construir por sí mismo.
+
+<Aside type="caution" title="Criterios generales de selección">
+Antes de proponer una red neuronal, conviene preguntarse: ¿cuántos datos hay? (miles de filas favorecen a los <a href="/ml/decision-trees/">árboles y ensambles</a>; millones, a las redes), ¿la relación es realmente no lineal?, ¿se necesita explicar cada predicción ante negocio o ante un regulador?, ¿el margen de mejora justifica el costo de entrenamiento y mantenimiento? Un modelo simple que funciona en producción vale más que uno profundo que nadie puede mantener.
+</Aside>
+
+<SectionComplete id="dlbi1-tradicional" label="✓ Tradicional vs DL" />
+
+## La neurona artificial: pesos, sesgo y capas ocultas
+
+Una **neurona artificial** es una calculadora mínima: multiplica cada entrada por un **peso**, suma un **sesgo** y pasa el resultado por una **función de activación**. Los pesos codifican cuánto importa cada variable; el sesgo desplaza el punto donde la neurona "se enciende". Una **capa oculta** es un grupo de neuronas que operan en paralelo sobre las mismas entradas; una red profunda apila varias.
+
+La red siguiente es real y calcula en vivo: dos variables de un cliente entran, tres neuronas ocultas se activan y la salida es una probabilidad de abandono. Mueva los deslizadores y observe cómo la señal se propaga hacia adelante — eso es **forward propagation**:
+
+<MlpForwardPass client:visible />
+
+Observe que cada neurona oculta se especializa: una responde al riesgo general, otra a los clientes nuevos, otra solo se enciende con quejas graves. Nadie programó esas especialidades neurona por neurona; en una red entrenada, **emergen del ajuste de los pesos**. La probabilidad final no es más que la composición de esas tres lecturas parciales.
+
+<Aside type="tip">
+La formulación matricial completa —notación, arquitectura por capas y el ejemplo clásico de reconocer dígitos— se desarrolla en la lección técnica de <a href="/ml/deep-learning/#arquitectura-de-redes">Introducción a Deep Learning</a>.
+</Aside>
+
+<SectionComplete id="dlbi1-neurona" label="✓ La neurona" />
+
+## Funciones de activación
+
+Si las neuronas solo sumaran y multiplicaran, apilar capas sería inútil: la composición de operaciones lineales sigue siendo lineal, y la red entera equivaldría a una regresión. La **función de activación** introduce la no linealidad que permite representar reglas compuestas — "el descuento eleva las ventas, pero solo hasta cierto punto", "el riesgo se dispara a partir de la tercera queja".
+
+Explore las funciones más utilizadas y sus derivadas. ReLU —cero para entradas negativas, identidad para positivas— es la opción por defecto en redes modernas precisamente por su simplicidad:
+
+<ActivationExplorer client:visible />
+
+<Aside type="note">
+La derivada de la activación es lo que permite entrenar la red (la sección siguiente lo explica). El análisis de saturación, gradientes que se desvanecen y la elección de activación por tipo de capa se estudia en <a href="/ml/optimization/#funciones-de-activación">Regularización y Optimización</a>.
+</Aside>
+
+<SectionComplete id="dlbi1-activacion" label="✓ Activación" />
+
+## Aprender es minimizar: pérdida y descenso de gradiente
+
+Entrenar una red es un problema de optimización. La **función de pérdida** mide cuánto se equivoca el modelo — por ejemplo, la distancia entre la probabilidad de abandono predicha y lo que el cliente hizo en realidad. Entrenar consiste en **ajustar los pesos para que esa pérdida baje**.
+
+El algoritmo que lo consigue es el **descenso de gradiente**: en cada paso se calcula hacia dónde crece la pérdida y se mueven los pesos en la dirección contraria, con un tamaño de paso llamado **tasa de aprendizaje**. Arrastre el punto inicial, elija una tasa y ejecute el descenso:
+
+<GradientDescent client:visible />
+
+Una tasa demasiado baja avanza a paso de tortuga; una demasiado alta rebota y diverge. En una red real hay dos piezas más que conviene nombrar, ambas conceptualmente simples: **forward propagation** calcula la predicción y la pérdida propagando las entradas hacia adelante (lo que usted ya hizo en la sección de la neurona), y **backpropagation** recorre la red hacia atrás repartiendo la responsabilidad del error entre todos los pesos — es la aplicación sistemática de la regla de la cadena, y es lo que hace posible calcular el gradiente en redes con millones de parámetros.
+
+<Aside type="tip">
+La derivación completa de backpropagation —las cuatro ecuaciones y su interpretación— está en la lección técnica de <a href="/ml/deep-learning/#backpropagation">Introducción a Deep Learning</a>. Para el trabajo de BI basta el concepto: la red aprende repartiendo el error hacia atrás, capa por capa.
+</Aside>
+
+<SectionComplete id="dlbi1-gradiente" label="✓ Aprender" />
+
+## Entrenamiento, validación y sobreajuste
+
+Un modelo no se evalúa por lo bien que repite lo que ya vio, sino por lo bien que **generaliza** a datos nuevos. Por eso los datos se dividen: una parte **de entrenamiento** para ajustar los pesos y una parte **de validación** que el modelo nunca ve durante el ajuste. Las dos curvas de pérdida que producen son el instrumento de lectura más importante de todo el proceso.
+
+Entrene con distintas capacidades de modelo y niveles de regularización, y observe cuándo las curvas se separan:
+
+<TrainingCurves client:visible />
+
+Tres lecturas cubren la mayoría de los casos reales. Con **capacidad baja**, ambas curvas se estancan altas: el modelo no da para más (*subajuste*). Con **capacidad alta y sin regularización**, la curva de entrenamiento sigue bajando mientras la de validación toca un mínimo y empieza a subir: el modelo está **memorizando** el conjunto de entrenamiento en lugar de aprender el patrón (*sobreajuste*). La **regularización** —penalizar la complejidad, o simplemente **detener el entrenamiento en el mínimo de validación** (*early stopping*)— cierra esa brecha a cambio de un piso de entrenamiento algo más alto.
+
+<Aside type="caution" title="La curva que importa es la de validación">
+Reportar el desempeño sobre los datos de entrenamiento es el error metodológico más frecuente y el más costoso: produce métricas excelentes en la presentación y un modelo que falla en producción. La geometría de la regularización (L1, L2, dropout) se desarrolla en <a href="/ml/optimization/#regularización">Regularización y Optimización</a>.
+</Aside>
+
+<SectionComplete id="dlbi1-curvas" label="✓ Validación" />
+
+## Resumen
+
+- **Deep Learning** son redes neuronales de varias capas que aprenden sus propias representaciones; en BI aporta en predicción, clasificación, automatización y soporte a decisiones.
+- La diferencia conceptual con los modelos tradicionales es que la red **aprende las variables derivadas** que un modelo lineal necesita recibir hechas — XOR es el ejemplo mínimo.
+- Una **neurona** combina pesos, sesgo y activación; las **capas ocultas** componen lecturas parciales en una predicción (forward propagation).
+- La **función de activación** aporta la no linealidad; sin ella, apilar capas no añade nada.
+- Entrenar es **minimizar una pérdida** con descenso de gradiente; backpropagation reparte el error hacia atrás para calcular cada ajuste.
+- La evaluación honesta usa datos de **validación**: la brecha entre ambas curvas delata el sobreajuste, y el early stopping es la defensa más simple.
+- Criterio de selección: con pocos datos o exigencia de explicabilidad, prefiera modelos clásicos; reserve las redes para volumen y complejidad que las justifiquen.

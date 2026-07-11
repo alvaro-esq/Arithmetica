@@ -110,6 +110,15 @@ export default defineConfig({
             { label: "RAG y Text-to-SQL", link: "llm/rag-y-hablar-con-tus-datos/" },
           ],
         },
+        {
+          label: "Deep Learning para Business Intelligence",
+          collapsed: false,
+          items: [
+            { label: "El curso", link: "dl-bi/" },
+            { label: "Fundamentos de Deep Learning y Redes Neuronales", link: "dl-bi/fundamentos-de-deep-learning/" },
+            { label: "Redes Densas para Datos Estructurados", link: "dl-bi/redes-densas-datos-estructurados/" },
+          ],
+        },
       ],
     }),
     svelte(),

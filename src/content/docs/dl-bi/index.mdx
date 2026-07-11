@@ -1,0 +1,34 @@
+---
+title: Deep Learning para Business Intelligence
+description: Curso de fundamentos de Deep Learning orientado a Business Intelligence — de la neurona artificial a las redes densas sobre datos tabulares, con evaluación de negocio y visualizaciones interactivas.
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Un módulo de **Deep Learning orientado a Business Intelligence**: qué es una red
+neuronal y cuándo conviene usarla, cómo aprende y cómo se lee su entrenamiento,
+y cómo se aplica a los datos tabulares del negocio — churn, riesgo y
+segmentación — hasta la decisión final: elegir el umbral, medir el costo y
+explicar el resultado. Cada concepto se manipula en pantalla: propague la señal
+por una red real, entrene hasta ver el sobreajuste y arrastre el umbral que
+decide a quién retener.
+
+<CardGrid>
+  <LinkCard
+    title="1 · Fundamentos de Deep Learning y Redes Neuronales"
+    description="Por qué DL en BI, modelos tradicionales frente a redes, la neurona por dentro, descenso de gradiente y cómo leer las curvas de entrenamiento."
+    href="/dl-bi/fundamentos-de-deep-learning/"
+  />
+  <LinkCard
+    title="2 · Redes Densas y Deep Learning para Datos Estructurados"
+    description="El perceptrón multicapa sobre tablas de negocio: normalización, capacidad y dropout, evaluación por costos de un modelo de churn y explicabilidad."
+    href="/dl-bi/redes-densas-datos-estructurados/"
+  />
+</CardGrid>
+
+**Orden recomendado:** la segunda lección aplica todo lo que la primera
+construye (la red, el entrenamiento y la validación), así que conviene
+recorrerlas en secuencia. Para profundizar en la matemática — backpropagation,
+la geometría de la regularización o las arquitecturas tabulares avanzadas — cada
+sección enlaza a la lección correspondiente del
+<a href="/ml/">curso técnico de Statistical Learning</a>.
