@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Ink & Copper tokens (src/lib/svm/colors.ts): paper, border, accent, copper -->
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="#F5F3EE" stroke="#E3DFD4" stroke-width="2"/>
+  <path d="M18 49 L32 15 L46 49 M23.5 38 H40.5" fill="none" stroke="#1A3A6B" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="32" cy="15" r="6" fill="#B5532A"/>
+</svg>
